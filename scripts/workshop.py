@@ -65,6 +65,7 @@ def decode(text):
 
 def cli(project):
     candidates = [project / "05_素材工坊/.wowidea/runtime/dist/cli.js",
+                  project / "05_素材工坊/.tools/wowidea/dist/cli.js",
                   project / "05_素材工坊/.tools/wowidea/node_modules/@easyai/cli/dist/cli.js",
                   KIT / ".tools/wowidea/node_modules/@easyai/cli/dist/cli.js"]
     node = shutil.which("node")
@@ -282,7 +283,17 @@ def generate(project):
         adapted = project / f"07_AE资产素材/适配素材/{job['partId']}_{job['screenId']}_{job['id']}.png"
         if record_path.exists():
             old = read(record_path)
-            if old.get('status') == 'complete' and adapted.is_file():
+            if old.get('status') == 'complete':
+                original = Path(old.get('original', ''))
+                if not original.is_absolute():
+                    original = project / original
+                adaptation = {'fit': job['fit'], 'width': int(job['target']['w']), 'height': int(job['target']['h'])}
+                if not adapted.is_file() or old.get('adaptation') != adaptation:
+                    if not original.is_file():
+                        raise RuntimeError('已完成任务的原件不存在，无法重新适配。请恢复原任务下载，不会重复生成。')
+                    fit_image(original, adapted, adaptation['width'], adaptation['height'], adaptation['fit'])
+                    old['adaptation'] = adaptation
+                    write(record_path, old)
                 print(f"复用已完成素材：{job['id']}")
                 part = next(p for p in show['parts'] if p['id']==job['partId'])
                 part.setdefault('backgrounds', {})[job['screenId']] = adapted.relative_to(project).as_posix()
@@ -316,7 +327,8 @@ def generate(project):
                 raise ValueError(f'生成比例不符：实际 {iw}×{ih}，要求 {a:g}:{b:g}。保留结果，不重试。')
             fit_image(original, adapted, int(job['target']['w']), int(job['target']['h']), job['fit'])
             record.update(status='complete', originalSize=[iw,ih], adapted=adapted.relative_to(project).as_posix(),
-                          original=str(original), taskId=data.get('taskId'), billing=data.get('pricing','接口未提供'))
+                          original=os.path.relpath(original,project), taskId=data.get('taskId'), billing=data.get('pricing','接口未提供'),
+                          adaptation={'fit':job['fit'],'width':int(job['target']['w']),'height':int(job['target']['h'])})
             part = next(p for p in show['parts'] if p['id']==job['partId'])
             part.setdefault('backgrounds', {})[job['screenId']] = adapted.relative_to(project).as_posix()
             write(project/SPEC,show)

@@ -7,6 +7,7 @@ import sys
 import venv
 
 ROOT=Path(__file__).resolve().parents[1]
+WOWIDEA_REF='343466aa7628fd0df00fdf399d78ec4f36957826'
 
 
 def main():
@@ -30,8 +31,20 @@ def main():
         npm=shutil.which('npm.cmd' if sys.platform=='win32' else 'npm')
         if not npm:raise RuntimeError('需要 Node.js 20+ 与 npm 来安装 Wowidea CLI。')
         version=subprocess.check_output([shutil.which('node'),'--version'],text=True).strip()
-        if int(version.lstrip('v').split('.')[0])<20:raise RuntimeError('Node.js 版本需要 20 或以上。')
-        subprocess.run([npm,'install','--prefix',str(runtime/'.tools/wowidea'),'@easyai/cli@0.8.0'],check=True)
+        numbers=[int(v) for v in version.lstrip('v').split('.')[:2]]
+        if numbers[0]<20 or numbers[0]==20 and numbers[1]<3:raise RuntimeError('Node.js 版本需要 20.3 或以上。')
+        git=shutil.which('git')
+        if not git:raise RuntimeError('需要 Git 下载固定版本的 Wowidea CLI 源代码。')
+        package=runtime/'.tools/wowidea'
+        if not package.exists():
+            subprocess.run([git,'clone','--quiet','--no-checkout','https://github.com/Salvatore0104/wowidea-cli.git',str(package)],check=True)
+            subprocess.run([git,'-C',str(package),'checkout','--quiet','--detach',WOWIDEA_REF],check=True)
+        else:
+            current=subprocess.check_output([git,'-C',str(package),'rev-parse','HEAD'],text=True).strip()
+            if current!=WOWIDEA_REF:raise RuntimeError('已有 Wowidea 源码版本不同，不会覆盖，请选择新目录。')
+        subprocess.run([npm,'ci','--prefix',str(package)],check=True)
+        subprocess.run([npm,'run','build','--prefix',str(package)],check=True)
+        subprocess.run([shutil.which('node'),str(package/'dist/cli.js'),'--version'],check=True)
     command=[str(python),str(ROOT/'scripts/workshop.py'),'init','--project',str(target),'--name',a.name,'--id',a.id,
              '--width',str(a.width),'--height',str(a.height),'--duration',str(a.duration),'--fps',str(a.fps),'--bpm',str(a.bpm),'--style',a.style,'--mask-channel',a.mask_channel]
     if a.mask:command+=['--mask',str(a.mask.resolve())]

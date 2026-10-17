@@ -1,6 +1,6 @@
 # Wowidea 集成与生成约定
 
-工具使用 npm 包 `@easyai/cli@0.8.0` 的 **CLI `--direct`** 流程，按用户要求不使用 Canvas。复用 CLI 保存的 API 认证，不保存用户 API Key 到项目、不在网页调用生成接口，也不直接调用第三方模型供应商。
+工具使用 Wowidea CLI 0.8.0（从官方 GitHub 固定提交 `343466aa7628fd0df00fdf399d78ec4f36957826` 构建；该版本尚未发布至 npm，安装器不会调用不存在的 npm 版本） 的 **CLI `--direct`** 流程，按用户要求不使用 Canvas。复用 CLI 保存的 API 认证，不保存用户 API Key 到项目、不在网页调用生成接口，也不直接调用第三方模型供应商。
 
 ## 运行方式
 
@@ -9,7 +9,7 @@
 3. 提示词写明屏幕、正式尺寸、生成比例、风格、段落和音频摘要。请求采用 `model / prompt / aspect_ratio / resolution / n=1`；本地参考路径使用 `image_urls`，由 CLI 上传并绑定。
 4. 首次 `generate` 执行 `project setup --dir 05_素材工坊 --name 节目名 --no-canvas`，仅准备本地运行文件，不创建远端画布。
 5. 每项使用 UTF-8 请求文件，通过 `image generate --direct --file 请求.json` 提交一次；不混用 `--file` 和 prompt/model 等直接生成参数。
-6. 检查返回 `outputSpec` 及下载原图的实际宽高；不符即停止，保留原任务。
+6. 检查返回 `outputSpec` 及下载原图的实际宽高；API 标记 mismatch 或对数比例误差超过 3.5% 时停止，保留原任务。容差处理模型像素取整，不代表承诺原生精确舞台像素。
 7. 以 `cover` 裁边或 `contain` 留透明边适配正式屏幕像素，PNG 原件及适配件分别保存。画布最终根据真实遮罩裁切。
 
 当比例差距太大或关键主体可能被裁掉，应改为分屏构图、明确调整视觉方案或使用接近比例的兼容模型；不能通过非等比拉伸宣称原生符合舞台尺寸。默认只生成背景，网页标题独立排版。

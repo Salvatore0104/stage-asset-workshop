@@ -18,7 +18,7 @@
 python scripts/install.py --target "【节目目录】" --name "【节目名称】" --id "【英文代号】" --width 【宽】 --height 【高】 --duration 【秒】 --mask "【遮罩PNG】" --mask-channel luminance --audio "【音频路径】" --fps 【FPS】 --bpm 【BPM】 --style "【风格】"
 ```
 
-无音频／遮罩时省略对应参数；Alpha 遮罩用 `--mask-channel alpha`，反相加 `--mask-invert`。安装器建立项目私有 Python 环境并安装 Pillow、项目私有的 `@easyai/cli@0.8.0`，不会改写全局技能或系统凭证。已有兼容 Wowidea CLI 可加 `--skip-wowidea`。Node.js 20+ 与 npm 必须已存在；缺失时明确报告，不宣称安装成功。
+无音频／遮罩时省略对应参数；Alpha 遮罩用 `--mask-channel alpha`，反相加 `--mask-invert`。安装器建立项目私有 Python 环境并安装 Pillow；Wowidea CLI 从官方 GitHub 源码的固定提交构建在项目内部，不会改写全局技能或系统凭证。已有兼容 Wowidea CLI 可加 `--skip-wowidea`。Node.js 20.3+、npm 与 Git 必须已存在；缺失时明确报告，不宣称安装成功。
 
 目标若已初始化，不覆盖；直接进入该项目继续。创建成功后，**向用户展示实际生成的目录树和每个目录用途**，给出配置文件、工坊源代码和交付网页位置；不要只说“已初始化”。
 

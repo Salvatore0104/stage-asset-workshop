@@ -8,7 +8,7 @@
 
 > 请读取 https://raw.githubusercontent.com/Salvatore0104/stage-asset-workshop/main/INSTALL.md 并安装节目素材工坊，项目目录【路径】，节目【名称】，分辨率【宽×高】，遮罩【PNG路径及白黑含义】，时长【秒数或段落表】，音频【路径/无】，BPM【数值】，风格【描述】，标题文案【文本】，用 Wowidea 生成素材后构建简体中文网页，并部署到 GitHub 仓库【owner/节目仓库名】。
 
-把 `【…】` 换成实际信息即可。没有终端、文件或网络执行能力的聊天 AI 无法直接安装。需要 Python 3.10+、Node.js 20+；在线发布另需 Git、GitHub CLI 和发布权限。生成使用 `--direct`，不使用 Canvas；复用 CLI 当前 API 登录状态，新用户需完成一次 CLI API 认证。
+把 `【…】` 换成实际信息即可。没有终端、文件或网络执行能力的聊天 AI 无法直接安装。需要 Python 3.10+、Node.js 20.3+ 和 Git；在线发布另需 GitHub CLI 和发布权限。生成使用 `--direct`，不使用 Canvas；复用 CLI 当前 API 登录状态，新用户需完成一次 CLI API 认证。
 
 ## 能做什么
 
