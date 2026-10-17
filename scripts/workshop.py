@@ -26,6 +26,14 @@ FOLDERS = {
     "99_归档": "旧版本与明确淘汰的素材，不覆盖原件。"
 }
 SPEC = "03_资产与需求/show.json"
+PROJECT_MEMORY = """## 素材工坊固定约定
+
+- 本项目相关素材统一使用 Wowidea CLI `--direct` 生成，不使用 Wowidea Canvas，不要求 Canvas OAuth，不直接调用第三方模型供应商。
+- 先根据真实屏幕分辨率、遮罩、段落时长、音频和视觉需求规划素材；查询实时模型能力，保留生成原件，再等比适配屏幕。
+- 网页和项目说明使用简体中文；默认交付本地 HTML 工坊及源码，不自动部署到 GitHub 或其他外部服务。
+- 项目规格入口为 `03_资产与需求/show.json`。任务 ID、采用素材和进度分别写入 `成片ID记录.md`、`07_AE资产素材` 和 `进度.md`。
+- 任意接手 AI 必须先读本记忆、`00_项目简报.md`、`00_子对话说明.md` 和 `项目目录说明.md`，继续沿用以上约定。
+"""
 
 
 def read(path):
@@ -193,16 +201,23 @@ def init_project(args):
                    'prompt': args.style, 'backgrounds': {}}]
     }
     write(project / SPEC, show)
+    memory = project / '项目记忆.md'
+    if memory.exists():
+        previous = memory.read_text(encoding='utf-8')
+        if '## 素材工坊固定约定' not in previous:
+            memory.write_text(previous.rstrip() + '\n\n' + PROJECT_MEMORY, encoding='utf-8')
+    else:
+        memory.write_text('# 项目记忆\n\n' + PROJECT_MEMORY, encoding='utf-8')
     (project / '00_项目简报.md').write_text(f'# {args.name}｜项目简报\n\n- 节目代号：{args.id}\n- 正式画布：{args.width}×{args.height}\n- FPS：{args.fps}\n- BPM：{args.bpm}\n- 初始时长：{args.duration} 秒\n- 配置：[show.json](03_资产与需求/show.json)\n- 目录说明：[项目目录说明.md](项目目录说明.md)\n\n'+('已导入遮罩。\n' if mask_file else '**尚未提供遮罩，暂用全画布；正式舞台映射尚未验收。**\n'), encoding='utf-8')
     (project / '项目目录说明.md').write_text('# 项目目录说明\n\n' + '\n'.join(f'- `{k}/`：{v}' for k, v in FOLDERS.items()) + '\n\n配置入口：`03_资产与需求/show.json`。工坊入口：`05_素材工坊/scripts/workshop.py`。交付网页在 `04_输出交付/<版本>/web/index.html`。\n', encoding='utf-8')
     for filename, heading in [('00_子对话说明.md', '交接说明'), ('进度.md', '制作进度'), ('成片ID记录.md', '成片与任务 ID 记录'), ('制作方案.md', '制作方案')]:
         p = project / filename
         if not p.exists():
-            p.write_text(f'# {heading}\n\n项目已初始化。先读取 `00_项目简报.md`、`项目目录说明.md` 和 `03_资产与需求/show.json`。\n', encoding='utf-8')
+            p.write_text(f'# {heading}\n\n项目已初始化。先读取 `项目记忆.md`、`00_项目简报.md`、`项目目录说明.md` 和 `03_资产与需求/show.json`。素材使用 Wowidea CLI `--direct`，不使用 Canvas；默认交付本地工坊。\n', encoding='utf-8')
     skill = KIT / 'skills/stage-asset-workshop'
     if skill.is_dir():
         shutil.copytree(skill, project / '.agents/skills/stage-asset-workshop', dirs_exist_ok=True)
-    (project / 'AGENTS.md').write_text('# 节目素材工坊\n\n先读 `00_项目简报.md` 和 `03_资产与需求/show.json`。按 `.agents/skills/stage-asset-workshop/SKILL.md` 工作。网页使用简体中文；原始素材保留；任务 ID 和进度写回根目录文档。使用 Wowidea CLI --direct，不使用 Canvas，不自行绕过平台调用供应商。\n', encoding='utf-8')
+    (project / 'AGENTS.md').write_text('# 节目素材工坊\n\n先读 `项目记忆.md`、`00_项目简报.md` 和 `03_资产与需求/show.json`。按 `.agents/skills/stage-asset-workshop/SKILL.md` 工作。网页使用简体中文；原始素材保留；任务 ID 和进度写回根目录文档。使用 Wowidea CLI --direct，不使用 Canvas，不自行绕过平台调用供应商。默认交付本地 HTML 工坊，未经后续明确要求不执行外部部署。\n', encoding='utf-8')
     print(f'已初始化：{project}\n配置：{project / SPEC}\n下一步：编辑段落、屏幕区域及视觉需求，运行 plan。')
 
 

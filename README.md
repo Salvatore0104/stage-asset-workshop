@@ -1,12 +1,12 @@
 # 节目素材工坊 · Stage Asset Workshop
 
-输入屏幕分辨率、舞台遮罩、段落时长、文案和音乐，让 AI 建立节目目录，调用 **Wowidea CLI** 生成按屏幕比例适配的视觉素材，构建简体中文工坊，并部署节目专属网页。
+输入屏幕分辨率、舞台遮罩、段落时长、文案和音乐，让 AI 建立节目目录，调用 **Wowidea CLI direct** 生成按屏幕比例适配的视觉素材，构建可本地使用的简体中文工坊。
 
 **[在线工坊](https://salvatore0104.github.io/stage-asset-workshop/) · [一句话安装](INSTALL.md) · [目录结构](docs/目录结构.md) · [输入替换模板](docs/节目需求模板.md)**
 
 ## 直接发给其他 AI
 
-> 请读取 https://raw.githubusercontent.com/Salvatore0104/stage-asset-workshop/main/INSTALL.md 并安装节目素材工坊，项目目录【路径】，节目【名称】，分辨率【宽×高】，遮罩【PNG路径及白黑含义】，时长【秒数或段落表】，音频【路径/无】，BPM【数值】，风格【描述】，标题文案【文本】，用 Wowidea 生成素材后构建简体中文网页，并部署到 GitHub 仓库【owner/节目仓库名】。
+> 请读取 https://raw.githubusercontent.com/Salvatore0104/stage-asset-workshop/main/INSTALL.md 并安装节目素材工坊：项目目录【路径】，节目【名称】，分辨率【宽×高】，遮罩【PNG路径及白黑含义】，时长【秒数或段落表】，音频【路径/无】，FPS【数值】，BPM【数值】，风格【描述】，文案【文本】。初始化标准目录，将“本项目素材使用 Wowidea CLI --direct 生成，不使用 Canvas，默认本地交付”写入项目记忆和 AI 交接说明；生成适配素材、构建简体中文工坊并验证本地播放，交付本地入口和源码。
 
 把 `【…】` 换成实际信息即可。没有终端、文件或网络执行能力的聊天 AI 无法直接安装。需要 Python 3.10+、Node.js 20.3+ 和 Git；在线发布另需 GitHub CLI 和发布权限。生成使用 `--direct`，不使用 Canvas；复用 CLI 当前 API 登录状态，新用户需完成一次 CLI API 认证。
 
@@ -17,7 +17,7 @@
 - 按每个屏幕的比例查询所选模型能力，选择接近的生成比例；保留原件，再以等比裁切／留白适配正式尺寸。
 - 按段落生成背景，文字单独排版；网页可编辑标题、副标题，上传本地音频同步试听。
 - 逐层透明 PNG／序列、静态单张、舞台 matte、PGM matte、WebM 预览和输出 manifest。
-- 一次命令串联生成、构建、发布；只发布静态网页和采用素材，不发布 CLI 认证及原始任务记录。
+- 一次命令串联生成与本地构建；另行要求时可发布静态网页，不公开 CLI 认证及原始任务记录。
 - 生成任务保留 ID、缓存和精确 CLI 记录；遇到失败或比例不符停止，不自动重复付费生成。
 
 自动生成的是可用的节目工坊起点。复杂角色动画、精确分镜、音频节拍分析、PSD 特效还原与 AE 最终验收，仍由接手 AI 按节目需求完成。当前自动生成器支持图片；视频生成另按 Wowidea 工作流处理，不把静态图适配描述为 AI 动画生成。
@@ -36,13 +36,12 @@ python scripts/install.py --target ../我的节目 --name "我的节目" --id my
 python 05_素材工坊/scripts/workshop.py plan --project .
 python 05_素材工坊/scripts/workshop.py generate --project .
 python 05_素材工坊/scripts/workshop.py build --project .
-python 05_素材工坊/scripts/workshop.py deploy --project . --dir "04_输出交付/版本/web" --repo owner/my-show-workshop
 ```
 
-或在资料已确认、且已授权生成与发布时：
+或在资料已确认、且已授权生成时：
 
 ```bash
-python 05_素材工坊/scripts/workshop.py all --project . --repo owner/my-show-workshop
+python 05_素材工坊/scripts/workshop.py all --project .
 ```
 
 `plan` 不提交付费任务。`generate/all` 会使用当前 Wowidea 账号生成；`all --repo` 还会创建指定公开仓库或更新该仓库的受管 Pages 分支。不要在模板仓库的在线页面期待直接使用自己的 Wowidea 密钥：生成在本机 AI／CLI 中执行，网页只负责素材操作。

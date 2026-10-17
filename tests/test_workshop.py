@@ -29,6 +29,11 @@ class WorkshopTests(unittest.TestCase):
         for name in w.FOLDERS:self.assertTrue((self.root/name/'目录说明.md').is_file())
         self.assertTrue((self.root/'.agents/skills/stage-asset-workshop/SKILL.md').is_file())
         self.assertTrue((self.root/'05_素材工坊/scripts/workshop.py').is_file())
+        memory=(self.root/'项目记忆.md').read_text(encoding='utf-8')
+        self.assertIn('Wowidea CLI `--direct`',memory)
+        self.assertIn('默认交付本地 HTML',memory)
+        self.assertIn('项目记忆.md',(self.root/'AGENTS.md').read_text(encoding='utf-8'))
+        self.assertIn('项目记忆.md',(self.root/'00_子对话说明.md').read_text(encoding='utf-8'))
 
     def test_ratio_selection_uses_model_capabilities(self):
         self.assertEqual(w.choose_ratio(7800,1000,['1:1','4:1','8:1']),'8:1')
