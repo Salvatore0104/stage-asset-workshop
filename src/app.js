@@ -81,6 +81,7 @@
   $('show-text').oninput=()=>{part.text=$('show-text').value;draw();};
   $('show-subtitle').oninput=()=>{part.subtitle=$('show-subtitle').value;draw();};
   $('audio-file').onchange=()=>{stop();if(audioUrl)URL.revokeObjectURL(audioUrl);const file=$('audio-file').files[0];if(file){audioUrl=URL.createObjectURL(file);audio.src=audioUrl;$('audio-status').textContent=`本地试听：${file.name}`;}};
+  $('choose-audio').onclick=()=>$('audio-file').click();
   $('save-settings').onclick=()=>download(new Blob([JSON.stringify({...C,bpm},null,2)],{type:'application/json'}),`${C.projectId}_workshop-settings.json`);
   $('still').onclick = async () => {
     try {

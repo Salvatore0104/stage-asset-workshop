@@ -38,7 +38,7 @@ def main():
     if a.mask_invert:command+=['--mask-invert']
     if a.audio:command+=['--audio',str(a.audio.resolve())]
     subprocess.run(command,check=True)
-    print(f'安装完成。运行入口：{python} {runtime / "scripts/workshop.py"}\n先读取根目录的项目目录说明.md。首次生成前，Wowidea Canvas 可能需要当前用户完成一次 OAuth 登录；不会索取或写入明文凭证。')
+    print(f'安装完成。运行入口：{python} {runtime / "scripts/workshop.py"}\n先读取根目录的项目目录说明.md。生成使用 Wowidea CLI --direct，复用 CLI 的 API 登录状态；无需 Canvas 授权。')
 
 
 if __name__=='__main__':

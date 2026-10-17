@@ -79,6 +79,7 @@ class WorkshopTests(unittest.TestCase):
         with patch.object(w,'model_info',return_value=CAP),patch.object(w,'cli',return_value=['mock']),patch.object(w,'run',side_effect=fake_run):
             w.generate(self.root);w.generate(self.root)
         self.assertEqual(len(calls),1)
+        self.assertIn('--direct',calls[0])
         self.assertTrue(w.load_project(self.root)['parts'][0]['backgrounds']['main'].endswith('.png'))
 
     def test_generation_mismatch_never_auto_rerolls(self):

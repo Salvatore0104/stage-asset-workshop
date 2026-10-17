@@ -201,7 +201,7 @@ def init_project(args):
     skill = KIT / 'skills/stage-asset-workshop'
     if skill.is_dir():
         shutil.copytree(skill, project / '.agents/skills/stage-asset-workshop', dirs_exist_ok=True)
-    (project / 'AGENTS.md').write_text('# 节目素材工坊\n\n先读 `00_项目简报.md` 和 `03_资产与需求/show.json`。按 `.agents/skills/stage-asset-workshop/SKILL.md` 工作。网页使用简体中文；原始素材保留；任务 ID 和进度写回根目录文档。使用本项目的 Wowidea Canvas，不自行绕过平台调用供应商。\n', encoding='utf-8')
+    (project / 'AGENTS.md').write_text('# 节目素材工坊\n\n先读 `00_项目简报.md` 和 `03_资产与需求/show.json`。按 `.agents/skills/stage-asset-workshop/SKILL.md` 工作。网页使用简体中文；原始素材保留；任务 ID 和进度写回根目录文档。使用 Wowidea CLI --direct，不使用 Canvas，不自行绕过平台调用供应商。\n', encoding='utf-8')
     print(f'已初始化：{project}\n配置：{project / SPEC}\n下一步：编辑段落、屏幕区域及视觉需求，运行 plan。')
 
 
@@ -275,8 +275,8 @@ def generate(project):
     jobs = plan(project)['jobs']
     runtime = project / '05_素材工坊'
     runtime.mkdir(parents=True, exist_ok=True)
-    setup = decode(run(cli(project) + ['--json', 'project', 'setup', '--dir', runtime, '--name', show['name']], timeout=300))
-    # Uses the Canvas binding retained by project setup. Never chooses --direct.
+    setup = decode(run(cli(project) + ['--json', 'project', 'setup', '--dir', runtime, '--name', show['name'], '--no-canvas'], timeout=300))
+    # User-selected CLI direct mode; local setup never creates a remote Canvas.
     for job in jobs:
         record_path = project / f"07_AE资产素材/生成记录/{job['id']}.json"
         adapted = project / f"07_AE资产素材/适配素材/{job['partId']}_{job['screenId']}_{job['id']}.png"
@@ -294,7 +294,7 @@ def generate(project):
                   'requestedResolution': job['request']['resolution']}
         write(record_path, record)
         try:
-            envelope = decode(run(cli(project) + ['--json','image','generate','--file',request_path,
+            envelope = decode(run(cli(project) + ['--json','image','generate','--direct','--file',request_path,
                                   '--project-dir',runtime,'--dir',project/'07_AE资产素材/生成原件'], timeout=3600))
             data = envelope.get('data', envelope)
             record['result'] = data
@@ -316,14 +316,14 @@ def generate(project):
                 raise ValueError(f'生成比例不符：实际 {iw}×{ih}，要求 {a:g}:{b:g}。保留结果，不重试。')
             fit_image(original, adapted, int(job['target']['w']), int(job['target']['h']), job['fit'])
             record.update(status='complete', originalSize=[iw,ih], adapted=adapted.relative_to(project).as_posix(),
-                          original=str(original), canvasUrl=data.get('canvasUrl'), taskId=data.get('taskId'), billing=data.get('pricing','接口未提供'))
+                          original=str(original), taskId=data.get('taskId'), billing=data.get('pricing','接口未提供'))
             part = next(p for p in show['parts'] if p['id']==job['partId'])
             part.setdefault('backgrounds', {})[job['screenId']] = adapted.relative_to(project).as_posix()
             write(project/SPEC,show)
             write(record_path,record)
             with (project/'成片ID记录.md').open('a',encoding='utf-8') as stream:
-                stream.write(f"\n- {job['partId']}/{job['screenId']}：任务 `{record.get('taskId')}`，画布 {record.get('canvasUrl')}，记录 `{record_path.relative_to(project).as_posix()}`\n")
-            print(f"素材完成：{adapted}\nCanvas：{record.get('canvasUrl')}\n计费：{record['billing']}")
+                stream.write(f"\n- {job['partId']}/{job['screenId']}：CLI direct 任务 `{record.get('taskId')}`，记录 `{record_path.relative_to(project).as_posix()}`\n")
+            print(f"素材完成：{adapted}\nCLI 任务：{record.get('taskId')}\n计费：{record['billing']}")
         except Exception as error:
             record.update(status='needs_attention', diagnostic=str(error))
             write(record_path,record)

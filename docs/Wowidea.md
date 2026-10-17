@@ -1,14 +1,14 @@
 # Wowidea 集成与生成约定
 
-工具使用官方 npm 包 `@easyai/cli@0.8.0` 的 **Canvas** 流程，不保存用户 API Key、不在浏览器调用生成接口，也不直接调用第三方模型供应商。
+工具使用 npm 包 `@easyai/cli@0.8.0` 的 **CLI `--direct`** 流程，按用户要求不使用 Canvas。复用 CLI 保存的 API 认证，不保存用户 API Key 到项目、不在网页调用生成接口，也不直接调用第三方模型供应商。
 
 ## 运行方式
 
 1. `plan` 调用 `models show <model> --json`，读取当前模型比例和分辨率。
 2. 按每块屏幕选择使 `abs(log(生成比例/目标比例))` 最小的支持比例。
 3. 提示词写明屏幕、正式尺寸、生成比例、风格、段落和音频摘要。请求采用 `model / prompt / aspect_ratio / resolution / n=1`；本地参考路径使用 `image_urls`，由 CLI 上传并绑定。
-4. 首次 `generate` 先执行 `project setup --dir 05_素材工坊 --name 节目名`；读取并保留该目录精确 Canvas 绑定。
-5. 每项使用 UTF-8 请求文件提交一次，不混用 `--file` 和直接生成参数，不使用 `--direct`。
+4. 首次 `generate` 执行 `project setup --dir 05_素材工坊 --name 节目名 --no-canvas`，仅准备本地运行文件，不创建远端画布。
+5. 每项使用 UTF-8 请求文件，通过 `image generate --direct --file 请求.json` 提交一次；不混用 `--file` 和 prompt/model 等直接生成参数。
 6. 检查返回 `outputSpec` 及下载原图的实际宽高；不符即停止，保留原任务。
 7. 以 `cover` 裁边或 `contain` 留透明边适配正式屏幕像素，PNG 原件及适配件分别保存。画布最终根据真实遮罩裁切。
 
@@ -16,13 +16,13 @@
 
 ## 登录与恢复
 
-API Key 登录和 Canvas OAuth 是不同权限。`doctor` 显示 API 接口可用，并不保证 Canvas 已登录。首次 Canvas 初始化若要求登录，按 CLI 提示完成一次；不要把凭证写入项目文件或让用户粘贴到聊天。
+本工具只需要 CLI API 认证。已有 `wowidea doctor --json` 可用的 API 登录可直接复用；新用户按 CLI 支持的安全方式初始化认证。不需要 Canvas OAuth；不把凭证写入项目文件或让用户粘贴到聊天。
 
-生成之前先读环境中可用的 Wowidea 技能；安装器附带的包内也有 `skill/wowidea/SKILL.md` 和模型提示词指南。需要完整画布控制时读其 Canvas 技能，不能改用浏览器自动化操作网站。
+生成之前先读环境中可用的 Wowidea 技能；安装器附带的包内也有 `skill/wowidea/SKILL.md` 和模型提示词指南。用户已经明确选择 direct 模式，优先保留这个选择；不要因技能默认推荐 Canvas 而改变路由。
 
 每个任务在提交前创建状态记录。已有 complete 记录和适配文件则复用；其他状态阻止重新提交。网络中断不表示服务端没收单；请从 `.wowidea/runs` 和生成记录恢复原任务。工具不自动重试、重新抽卡、换模型或生成修补帧。
 
-从结果记录读取 Canvas URL、Task ID、价格；费用未知写“接口未提供”，不要写零。由 Codex 执行后，按宿主能力在右侧浏览器面板打开 Canvas，交付时包含其链接。脚本只输出 URL，避免启动外部浏览器。
+从结果记录读取 Task ID、下载文件和价格；费用未知写“接口未提供”，不要写零。direct 模式没有 Canvas URL，最终回复只需素材、任务与节目网页链接。
 
 ## 当前范围
 
