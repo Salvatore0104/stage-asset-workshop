@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>通用素材工坊</title>
+<link rel="icon" href="data:,">
+<style>
+:root{color-scheme:dark;font-family:system-ui,"Microsoft YaHei",sans-serif;background:#0e1020;color:#eeeaf7}
+*{box-sizing:border-box}body{margin:0;padding:26px}main{max-width:1480px;margin:auto}h1{font-size:23px;margin:0 0 8px}h2{font-size:16px;margin:0 0 15px;color:#a4e8ef}p{color:#aea8c1;line-height:1.65}button,input,select{font:inherit;border:1px solid #42435a;border-radius:7px;background:#202238;color:inherit;padding:8px}button{cursor:pointer}button:disabled{opacity:.45;cursor:default}button.primary{background:#ea88ac;color:#201327;border:0}label{display:inline-flex;gap:8px;align-items:center}input[type=number]{width:85px}input[type=range]{accent-color:#ea88ac}.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:18px 0}.bar .timeline{flex:1;min-width:170px}.stage{border:1px solid #42435a;border-radius:9px;overflow:hidden;background:repeating-conic-gradient(#191c2b 0 25%,#252839 0 50%) 0 0/18px 18px}canvas{display:block;width:100%;height:auto}.grid{display:grid;grid-template-columns:1fr 1.4fr;gap:18px;margin-top:18px}.card{padding:20px;background:#171a2d;border:1px solid #30354c;border-radius:10px}.layers{display:flex;flex-wrap:wrap;gap:14px}progress{width:100%;margin-top:16px;height:10px}.status{color:#eac78d;white-space:pre-wrap}small{color:#b2adc2}#export-controls{border:0;padding:0;margin:0;min-width:0}#export-controls:disabled{opacity:.55}#error{color:#ffb8b8}#tc{font-variant-numeric:tabular-nums}@media(max-width:800px){body{padding:14px}.grid{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1 id="title">素材工坊</h1><small id="spec"></small>
+<p>节目视觉预览与分层素材导出</p>
+<section class="card" id="show-settings"><div class="bar"><label>标题文字 <input id="show-text" type="text" style="width:240px"></label><label>副标题 <input id="show-subtitle" type="text" style="width:240px"></label><button id="save-settings">下载当前设置</button></div><div class="bar"><label>预览音乐 <input id="audio-file" type="file" accept="audio/*"></label><span id="audio-status">未选择音乐</span></div><small>本地选择的音乐仅在当前浏览器播放。播放和拖动时间轴会同步试听；WebM 预览不含音轨，正式合成请使用原音频。</small></section>
+<div class="bar" id="transport"><label>段落 <select id="part" aria-label="段落"></select></label><button id="play" disabled>播放</button><label>BPM <input id="bpm" type="number" min="1" max="999" step="0.1"></label><label>预览遮罩 <input id="mask" type="range" min="0" max="100" value="65"></label><input id="scrub" aria-label="时间轴" class="timeline" type="range" min="0" value="0" step="1"><small id="tc"></small></div>
+<div class="stage"><canvas id="view" width="960" height="320"></canvas></div>
+<div class="grid"><section class="card"><h2>预览图层</h2><div id="layers" class="layers"></div><p>勾选只改变预览。合成参考及预览视频依目前勾选输出；「全部制作图层」会逐层输出所有制作层，另加舞台遮罩及已启用的 PGM 遮罩。</p><div id="layer-info"></div></section>
+<section class="card"><h2>输出</h2><fieldset id="export-controls" disabled><div class="bar"><label>图层 <select id="export-layer"></select></label><label>输出宽度 <input id="width" type="number" min="1" step="1"></label><small id="output-size"></small></div><div class="bar"><label>起始帧 <input id="start" type="number" min="0" value="0" step="1"></label><label>结束帧 <input id="end" type="number" min="0" step="1"></label><label><input id="clip" type="checkbox">依舞台遮罩裁切输出</label></div><div class="bar"><button id="export" class="primary">导出 PNG 到文件夹</button><button id="still">下载目前单张 PNG</button><button id="record">录制预览 WebM</button></div></fieldset><button id="cancel" disabled>取消输出</button><progress id="progress" max="1" value="0"></progress><p id="status" class="status">加载中…</p><p>尺寸保持舞台比例；所有图层使用同一画布。PNG 序列为逐帧计算；WebM 为即时预览，可能掉帧。</p></section></div><p id="error" role="alert"></p>
+</main>
+<script>window.WORKSHOP_CONFIG={"schemaVersion": 1, "projectId": "stage_demo", "title": "舞台灵感实验室 · 素材工坊", "stage": {"width": 1920, "height": 640}, "fps": 25, "bpm": 120.0, "previewMaxWidth": 1440, "imageSmoothing": true, "clipExportToStage": false, "stageMask": {"type": "geometry", "shapes": [{"type": "rect", "x": 0, "y": 160, "w": 240, "h": 320}, {"type": "rect", "x": 280, "y": 80, "w": 1360, "h": 480}, {"type": "polygon", "points": [[1680, 160], [1920, 220], [1920, 420], [1680, 480]]}]}, "pgm": {"enabled": false}, "assets": {}, "parts": [{"id": "S01", "name": "主视觉循环", "duration": {"unit": "seconds", "value": 16.0}, "loop": true, "text": "舞台灵感实验室", "subtitle": "为每一场演出，构建专属视觉", "prompt": "超宽舞台，左右两侧由半透明玻璃环、橙粉纸带与青绿光轨构成空间层次，中心留一整块深色干净区域放标题，不生成文字、标志和水印。材质有细腻折射与柔和光晕，画面明亮区域集中在两侧，背景深海军蓝。不要屏幕截图、UI或人物。", "backgrounds": {}, "backgroundAssets": [], "layers": [{"id": "background", "name": "视觉背景", "static": true, "cutPgm": true}, {"id": "art", "name": "标题文字", "cutPgm": true}, {"id": "fx", "name": "节拍特效"}, {"id": "frame", "name": "屏幕轮廓", "static": true}]}], "palette": ["#101827", "#261c48", "#f9afcf", "#87dbe5"], "audio": {}, "screens": [{"id": "main", "name": "主屏", "x": 0, "y": 0, "w": 1920, "h": 640}]};window.WORKSHOP_MEDIA={};</script>
+
+<script>/* Pure frame rendering: project data are supplied by the generated HTML. */
+window.Workshop = (() => {
+  const C = window.WORKSHOP_CONFIG;
+  const media = window.WORKSHOP_MEDIA;
+  const images = {};
+  let stageMask, pgmMask, scratch, overlayCache;
+  const canvas = (w, h) => {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    if (!c.getContext('2d')) throw new Error(`无法建立 ${w}×${h} 画布，请降低尺寸或改用离线渲染。`);
+    return c;
+  };
+  const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+  const frac = x => x - Math.floor(x);
+  const seconds = (part, bpm) => part.duration.value * (part.duration.unit === 'beats' ? 60 / bpm : 1);
+  const count = (part, bpm) => Math.max(1, Math.round(seconds(part, bpm) * C.fps));
+  const context = (part, frame, bpm) => {
+    const frames = count(part, bpm), duration = frames / C.fps, t = frame / C.fps;
+    return {config: C, part, frame, frames, fps: C.fps, bpm, t, duration,
+      beat: t * bpm / 60, phase: part.loop ? frac(t / duration) : clamp(t / duration),
+      width: C.stage.width, height: C.stage.height, clamp, frac,
+      kick: Math.exp(-frac(t * bpm / 60) * 5),
+      // Stateless random: never use evolving global RNG in frame rendering.
+      random: seed => frac(Math.sin(seed * 127.1 + 311.7) * 43758.5453)};
+  };
+  function shapePath(g, shapes) {
+    g.beginPath();
+    for (const s of shapes) {
+      if (s.type === 'rect') g.rect(s.x, s.y, s.w, s.h);
+      else {g.moveTo(...s.points[0]); for (const p of s.points.slice(1)) g.lineTo(...p); g.closePath();}
+    }
+  }
+  async function load(file) {
+    if (!media[file]) throw new Error(`未打包素材：${file}`);
+    const im = new Image();
+    await new Promise((resolve, reject) => {im.onload = resolve; im.onerror = () => reject(new Error(`素材加载失败：${file}`)); im.src = media[file];});
+    return im;
+  }
+  async function maskCanvas(spec) {
+    const c = canvas(C.stage.width, C.stage.height), g = c.getContext('2d');
+    if (spec.type === 'geometry') {g.fillStyle = '#fff'; shapePath(g, spec.shapes); g.fill();}
+    else {
+      const im = await load(spec.file);
+      if (im.naturalWidth !== c.width || im.naturalHeight !== c.height) throw new Error(`遮罩尺寸不符：${spec.file}`);
+      g.drawImage(im, 0, 0); const data = g.getImageData(0, 0, c.width, c.height), d = data.data;
+      for (let i = 0; i < d.length; i += 4) {
+        // Luminance is multiplied by source alpha; invert applies to final coverage.
+        let a = spec.channel === 'alpha' ? d[i + 3] : (.2126 * d[i] + .7152 * d[i + 1] + .0722 * d[i + 2]) * d[i + 3] / 255;
+        d[i] = d[i + 1] = d[i + 2] = 255; d[i + 3] = Math.round(spec.invert ? 255 - a : a);
+      }
+      g.putImageData(data, 0, 0);
+    }
+    return c;
+  }
+  const layers = part => [...part.layers,
+    ...(C.pgm.enabled ? [{id: 'pgm_matte', name: 'PGM 白色遮罩', static: true, defaultVisible: false}] : []),
+    {id: 'stage_mask', name: '舞台白色遮罩', static: true, defaultVisible: false}];
+  function image(g, id, options = {}) {
+    const a = C.assets[id], im = images[id]; if (!a || !im) throw new Error(`未定义素材：${id}`);
+    const r = options.rect || a, scale = options.scale ?? 1;
+    g.save(); g.translate(r.x + r.w / 2 + (options.dx || 0), r.y + r.h / 2 + (options.dy || 0));
+    g.rotate(options.rotate || 0); g.scale(scale, scale);
+    g.globalAlpha *= (a.opacity ?? 1) * (options.opacity ?? 1);
+    g.globalCompositeOperation = options.blend || a.blend || 'source-over';
+    g.drawImage(im, -r.w / 2, -r.h / 2, r.w, r.h); g.restore();
+  }
+  function render(target, {part, frame, bpm, layerIds, clip = false}) {
+    if (!Number.isInteger(frame) || frame < 0 || frame >= count(part, bpm)) throw new Error('帧超出段落范围');
+    const g = target.getContext('2d'), w = target.width, h = target.height;
+    if (!scratch || scratch.width !== w || scratch.height !== h) scratch = canvas(w, h);
+    const q = scratch.getContext('2d'), state = context(part, frame, bpm);
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+    for (const id of layerIds) {
+      const layer = layers(part).find(l => l.id === id); if (!layer) throw new Error(`未知图层：${id}`);
+      q.setTransform(1, 0, 0, 1, 0, 0); q.globalAlpha = 1; q.globalCompositeOperation = 'source-over'; q.clearRect(0, 0, w, h);
+      q.save(); q.scale(w / C.stage.width, h / C.stage.height); q.imageSmoothingEnabled = C.imageSmoothing;
+      try {
+        if (id === 'stage_mask') q.drawImage(stageMask, 0, 0);
+        else if (id === 'pgm_matte') q.drawImage(pgmMask, 0, 0);
+        else {
+          const scene = window.WORKSHOP_SCENES[part.id];
+          if (!scene) throw new Error(`缺少段落绘图：${part.id}`);
+          scene(q, state, id, {image, shapePath});
+        }
+      } finally {q.restore();}
+      if (C.pgm.enabled && layer.cutPgm) {q.globalCompositeOperation = 'destination-out'; q.drawImage(pgmMask, 0, 0, w, h);}
+      if (clip && id !== 'stage_mask') {q.globalCompositeOperation = 'destination-in'; q.drawImage(stageMask, 0, 0, w, h);}
+      q.globalCompositeOperation = 'source-over';
+      g.save(); g.globalCompositeOperation = layer.blend || 'source-over'; g.drawImage(scratch, 0, 0); g.restore();
+    }
+    return target;
+  }
+  function overlay(target, opacity) {
+    if (opacity <= 0) return;
+    const key = `${target.width}:${target.height}:${opacity}`;
+    if (!overlayCache || overlayCache.key !== key) {
+      const c = canvas(target.width, target.height), q = c.getContext('2d');
+      q.fillStyle = `rgba(0,0,0,${opacity})`; q.fillRect(0, 0, c.width, c.height);
+      q.globalCompositeOperation = 'destination-out'; q.drawImage(stageMask, 0, 0, c.width, c.height);
+      overlayCache = {key, canvas: c};
+    }
+    target.getContext('2d').drawImage(overlayCache.canvas, 0, 0);
+  }
+  async function init() {
+    for (const [id, a] of Object.entries(C.assets)) images[id] = await load(a.file);
+    stageMask = await maskCanvas(C.stageMask);
+    if (C.pgm.enabled) pgmMask = await maskCanvas(C.pgm.mask);
+    for (const p of C.parts) if (!window.WORKSHOP_SCENES[p.id]) throw new Error(`缺少段落绘图：${p.id}`);
+    await document.fonts.ready;
+  }
+  return {config: C, init, canvas, render, overlay, seconds, count, context, layers};
+})();
+</script>
+<script>/* Shared scene renderer. Extend a particular ID for bespoke animation. */
+window.WORKSHOP_SCENES = {};
+function renderShow(g, s, layer, api) {
+  const {width: w, height: h} = s, colors = s.config.palette || [];
+  if (layer === 'background') {
+    const gradient = g.createLinearGradient(0, 0, w, h);
+    gradient.addColorStop(0, colors[0] || '#101827'); gradient.addColorStop(1, colors[1] || '#261c48');
+    g.fillStyle = gradient; g.fillRect(0, 0, w, h);
+    for (const id of s.part.backgroundAssets || []) api.image(g, id);
+    return;
+  }
+  const main = (s.config.screens || []).find(r => r.id === (s.part.textScreen || 'main')) || {x:0,y:0,w,h};
+  if (layer === 'art') {
+    const entry = s.part.loop ? 1 : 1 - Math.pow(1 - s.clamp(s.t / .8), 3);
+    const pulse = s.part.loop ? 1 + .018 * Math.sin(s.phase * Math.PI * 2) : 1;
+    g.save();g.translate(main.x + main.w/2, main.y + main.h/2 + main.h*.12*(1-entry));g.scale(pulse,pulse);g.globalAlpha=entry;
+    g.fillStyle='rgba(8,12,24,.48)';g.fillRect(-main.w*.32,-main.h*.18,main.w*.64,main.h*.36);
+    const fitText=(text,initial,maxWidth)=>{let size=initial;g.font=`700 ${size}px system-ui,"Microsoft YaHei",sans-serif`;while(size>10&&g.measureText(text).width>maxWidth){size*=.94;g.font=`700 ${size}px system-ui,"Microsoft YaHei",sans-serif`;}return size;};
+    const title=String(s.part.text ?? s.config.title), subtitle=String(s.part.subtitle || '');
+    g.textAlign='center';g.textBaseline='middle';g.fillStyle=colors[2]||'#f9afcf';
+    fitText(title,Math.min(main.h*.16,main.w*.075),main.w*.85);g.fillText(title,0,-main.h*.035);
+    g.fillStyle=colors[3]||'#87dbe5';fitText(subtitle,Math.min(main.h*.045,main.w*.03),main.w*.85);g.fillText(subtitle,0,main.h*.10);
+    g.restore();return;
+  }
+  if (layer === 'fx') {
+    const cycles=Math.max(1,Math.round(s.duration*s.bpm/60));
+    const kick=Math.exp(-s.frac(s.phase*cycles)*5);
+    for(let i=0;i<32;i++){
+      const a=s.phase*Math.PI*2+i*Math.PI*2/32;
+      const x=w/2+Math.cos(a)*w*.43,y=h/2+Math.sin(a)*h*(.32+.025*kick);
+      g.fillStyle=i%2?(colors[2]||'#f9afcf'):(colors[3]||'#87dbe5');
+      g.globalAlpha=.4+.5*kick;g.beginPath();g.arc(x,y,Math.max(1,h*.004)*(1+kick*.6),0,Math.PI*2);g.fill();
+    }
+    g.globalAlpha=1;return;
+  }
+  if(layer==='frame'){
+    g.strokeStyle='rgba(162,192,216,.3)';g.lineWidth=Math.max(1,h*.0015);
+    if(s.config.stageMask.type==='geometry'){api.shapePath(g,s.config.stageMask.shapes);g.stroke();}
+  }
+}
+for(const part of window.WORKSHOP_CONFIG.parts) window.WORKSHOP_SCENES[part.id]=renderShow;
+</script>
+<script>(async () => {
+  const W = window.Workshop, C = W.config, $ = id => document.getElementById(id);
+  let part = C.parts[0], frame = 0, bpm = C.bpm, visible = new Set(), playing = false;
+  let busy = false, cancelled = false, anchor = 0, anchorFrame = 0, raf = 0;
+  const view = $('view');
+  const audio = new Audio();let audioUrl;
+  const audioAt = () => C.parts.slice(0,C.parts.indexOf(part)).reduce((n,p)=>n+W.count(p,bpm)/C.fps,0)+frame/C.fps+(C.audio?.offsetSeconds||0);
+  function seekAudio(){if(audio.src&&Number.isFinite(audio.duration))audio.currentTime=Math.max(0,Math.min(audio.duration,audioAt()));}
+  const message = text => {$('status').textContent = text;};
+  const fail = error => {$('error').textContent = error.message || String(error);};
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  function download(blob, name) {
+    const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+  function png(c) {return new Promise((resolve, reject) => c.toBlob(b => b ? resolve(b) : reject(new Error('PNG 编码失败；请降低尺寸。')), 'image/png'));}
+  const visibleIds = () => W.layers(part).filter(l => visible.has(l.id)).map(l => l.id);
+  function draw() {
+    W.render(view, {part, frame, bpm, layerIds: visibleIds()});
+    W.overlay(view, Number($('mask').value) / 100);
+    $('scrub').value = frame;
+    $('tc').textContent = `f${frame} / ${W.count(part, bpm) - 1} · ${(frame / C.fps).toFixed(2)}s`;
+  }
+  function stop() {playing = false;audio.pause(); cancelAnimationFrame(raf); $('play').textContent = '播放';}
+  function tick(now) {
+    if (!playing) return;
+    const next = anchorFrame + Math.floor((now - anchor) * C.fps / 1000), n = W.count(part, bpm);
+    frame = part.loop ? next % n : Math.min(n - 1, next); draw();
+    if(audio.src&&Number.isFinite(audio.duration)&&Math.abs(audio.currentTime-audioAt())>.18)seekAudio();
+    if (!part.loop && next >= n - 1) {stop(); return;}
+    raf = requestAnimationFrame(tick);
+  }
+  function start() {
+    if (!part.loop && frame >= W.count(part, bpm) - 1) frame = 0;
+    if(audio.src){seekAudio();audio.play().catch(()=>message('音乐未能自动播放，请重新选择本地音频后点击播放。'));}
+    playing = true; anchor = performance.now(); anchorFrame = frame; $('play').textContent = '暂停'; raf = requestAnimationFrame(tick);
+  }
+  function lock(value) {
+    busy = value; $('export-controls').disabled = value; $('cancel').disabled = !value;
+    for (const el of $('transport').querySelectorAll('input,select,button')) el.disabled = value;
+    for (const el of $('layers').querySelectorAll('input')) el.disabled = value;
+    for (const el of $('show-settings').querySelectorAll('input,button')) el.disabled = value;
+  }
+  function setup() {
+    $('show-text').value=part.text??'';$('show-subtitle').value=part.subtitle??'';
+    const n = W.count(part, bpm); frame = Math.min(frame, n - 1);
+    $('scrub').max = n - 1; $('start').value = 0; $('end').value = n - 1;
+    $('start').max = $('end').max = n - 1; visible = new Set();
+    $('layers').replaceChildren(); $('export-layer').replaceChildren(new Option('全部制作图层（逐层）', 'all'), new Option('目前勾选的合成参考', 'comp'));
+    for (const layer of W.layers(part)) {
+      const label = document.createElement('label'), input = document.createElement('input'); input.type = 'checkbox';
+      input.checked = layer.defaultVisible !== false; if (input.checked) visible.add(layer.id);
+      input.onchange = () => {input.checked ? visible.add(layer.id) : visible.delete(layer.id); draw();};
+      label.append(input, document.createTextNode(layer.name || layer.id)); $('layers').append(label);
+      $('export-layer').add(new Option(layer.name || layer.id, layer.id));
+    }
+    $('layer-info').textContent = `${part.loop ? '循环段' : '单次段'} · ${part.duration.value} ${part.duration.unit === 'beats' ? '拍' : '秒'} · 实际 ${n} 帧 / ${(n / C.fps).toFixed(3)} 秒`;
+    draw();
+  }
+  function dimensions() {
+    const width = Number($('width').value), height = Math.round(width * C.stage.height / C.stage.width);
+    if (!Number.isSafeInteger(width) || width <= 0 || height < 1) throw new Error('请输入有效的整数宽度。');
+    return {width, height};
+  }
+  const renderTo = (c, i, id, clip) => W.render(c, {part, frame: i, bpm, layerIds: id === 'comp' ? visibleIds() : [id], clip});
+  async function writeJson(dir, name, data) {
+    const handle = await dir.getFileHandle(name, {create: true}), stream = await handle.createWritable();
+    try {await stream.write(JSON.stringify(data, null, 2));} finally {await stream.close();}
+  }
+  $('play').onclick = () => playing ? stop() : start();
+  $('scrub').oninput = () => {stop(); frame = Number($('scrub').value);seekAudio(); draw();};
+  $('mask').oninput = draw;
+  $('part').onchange = () => {stop(); part = C.parts[Number($('part').value)]; frame = 0; setup();};
+  $('bpm').onchange = () => {
+    const next = Number($('bpm').value);
+    if (!Number.isFinite(next) || next <= 0 || next > 999) {$('bpm').value = bpm; message('BPM 请输入 0–999 之间的正数。'); return;}
+    stop(); bpm = next; frame = 0; setup();
+  };
+  $('width').oninput = () => {try {const d = dimensions(); $('output-size').textContent = `× ${d.height} px`;} catch {$('output-size').textContent = '尺寸无效';}};
+  $('cancel').onclick = () => {cancelled = true; message('正在停止，已完成的文件会保留。');};
+  $('show-text').oninput=()=>{part.text=$('show-text').value;draw();};
+  $('show-subtitle').oninput=()=>{part.subtitle=$('show-subtitle').value;draw();};
+  $('audio-file').onchange=()=>{stop();if(audioUrl)URL.revokeObjectURL(audioUrl);const file=$('audio-file').files[0];if(file){audioUrl=URL.createObjectURL(file);audio.src=audioUrl;$('audio-status').textContent=`本地试听：${file.name}`;}};
+  $('save-settings').onclick=()=>download(new Blob([JSON.stringify({...C,bpm},null,2)],{type:'application/json'}),`${C.projectId}_workshop-settings.json`);
+  $('still').onclick = async () => {
+    try {
+      const d = dimensions(), id = $('export-layer').value;
+      if (id === 'all') throw new Error('单张下载请先选一个图层或合成参考。');
+      download(await png(renderTo(W.canvas(d.width, d.height), frame, id, $('clip').checked)), `${C.projectId}_${part.id}_${id}_${String(frame).padStart(6, '0')}.png`);
+      message('已下载目前单张 PNG。');
+    } catch (e) {fail(e);}
+  };
+  $('export').onclick = async () => {
+    let folder, meta, written = 0;
+    try {
+      $('error').textContent = ''; stop();
+      if (!window.showDirectoryPicker) throw new Error('此环境无法选取文件夹。请使用支持此功能的浏览器；仍不可用时，请由 Codex 启动 localhost 服务。可先下载单张 PNG。');
+      const a = Number($('start').value), b = Number($('end').value), n = W.count(part, bpm), d = dimensions();
+      if (![a, b].every(Number.isInteger) || a < 0 || b < a || b >= n) throw new Error(`帧范围必须是 0–${n - 1} 的整数，且结束帧不小于起始帧。`);
+      const choice = $('export-layer').value, clip = $('clip').checked;
+      const selected = choice === 'all' ? W.layers(part) : choice === 'comp' ? [{id: 'comp', static: false}] : W.layers(part).filter(l => l.id === choice);
+      cancelled = false; lock(true);
+      const root = await window.showDirectoryPicker({mode: 'readwrite'});
+      // Fresh run folder: stale tail frames cannot contaminate a shorter new export.
+      const run = `${C.projectId}_${part.id}_${new Date().toISOString().replace(/[:.]/g, '-')}_${Math.random().toString(36).slice(2, 7)}`;
+      folder = await root.getDirectoryHandle(run, {create: true});
+      const total = selected.reduce((sum, l) => sum + (l.static ? 1 : b - a + 1), 0);
+      meta = {projectId: C.projectId, partId: part.id, fps: C.fps, bpm, width: d.width, height: d.height,
+        sourceFrameStart: a, sourceFrameEnd: b, totalPartFrames: n, actualDurationSeconds: n / C.fps,
+        clipToStage: clip, alpha: 'straight PNG', complete: false, writtenFiles: 0,
+        visibleLayers: visibleIds(), previewMaskIncluded: false,
+        layers: selected.map(l => ({id: l.id, static: !!l.static, blend: l.blend || 'source-over', expectedFiles: l.static ? 1 : b - a + 1}))};
+      await writeJson(folder, 'export_manifest.json', meta);
+      const output = W.canvas(d.width, d.height); $('progress').value = 0;
+      for (const layer of selected) {
+        if (cancelled) break;
+        const dir = await folder.getDirectoryHandle(layer.id, {create: true});
+        for (let i = a; i <= (layer.static ? a : b); i++) {
+          if (cancelled) break;
+          const blob = await png(renderTo(output, i, layer.id, clip));
+          const file = await dir.getFileHandle(`${part.id}_${layer.id}_${String(i).padStart(6, '0')}.png`, {create: true});
+          const stream = await file.createWritable(); try {await stream.write(blob);} finally {await stream.close();}
+          written++; $('progress').value = written / total; message(`${layer.id} · ${written}/${total}`); await delay(0);
+        }
+      }
+      meta.complete = !cancelled; meta.writtenFiles = written; await writeJson(folder, 'export_manifest.json', meta);
+      message(cancelled ? `已取消；保留 ${written} 个文件，manifest 标记为未完成。` : `已完成 ${written} 个 PNG；文件夹：${run}`);
+    } catch (e) {
+      if (meta && folder) {meta.writtenFiles = written; meta.error = e.message; try {await writeJson(folder, 'export_manifest.json', meta);} catch {}}
+      if (e.name === 'AbortError') message('已取消选取文件夹。'); else fail(e);
+    } finally {lock(false);}
+  };
+  $('record').onclick = async () => {
+    let stream, recorder, oldFrame = frame;
+    try {
+      $('error').textContent = ''; stop();
+      const mimeType = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(t => window.MediaRecorder?.isTypeSupported(t));
+      if (!mimeType || !view.captureStream) throw new Error('浏览器不支持 WebM 预览录制。');
+      lock(true); cancelled = false;
+      const recordCanvas = W.canvas(view.width, view.height), rg = recordCanvas.getContext('2d');
+      function recordDraw() {
+        draw(); rg.fillStyle = '#000'; rg.fillRect(0, 0, recordCanvas.width, recordCanvas.height); rg.drawImage(view, 0, 0);
+      }
+      frame = 0; recordDraw(); stream = recordCanvas.captureStream(C.fps);
+      recorder = new MediaRecorder(stream, {mimeType, videoBitsPerSecond: 8e6});
+      const chunks = []; let recordingError;
+      recorder.ondataavailable = e => {if (e.data.size) chunks.push(e.data);};
+      recorder.onerror = e => {recordingError = e.error || new Error('录制失败'); cancelled = true;};
+      const stopped = new Promise(resolve => {recorder.onstop = resolve;}); recorder.start(250);
+      const n = W.count(part, bpm), startTime = performance.now();
+      message('录制中；请保持此分页在前景。视频包含目前预览遮罩，背景为黑色。');
+      while (!cancelled) {
+        const i = Math.floor((performance.now() - startTime) * C.fps / 1000);
+        if (i >= n) break;
+        frame = i; recordDraw(); $('progress').value = i / n; await delay(1000 / C.fps);
+      }
+      if (recorder.state !== 'inactive') recorder.stop(); await stopped;
+      if (recordingError) throw recordingError;
+      if (!cancelled) {download(new Blob(chunks, {type: mimeType}), `${C.projectId}_${part.id}_preview.webm`); message('预览视频已下载。');}
+      else message('预览录制已取消。');
+    } catch (e) {fail(e);}
+    finally {if (recorder && recorder.state !== 'inactive') recorder.stop(); stream?.getTracks().forEach(t => t.stop()); frame = oldFrame; lock(false); draw();}
+  };
+  try {
+    await W.init();
+    if(C.audio?.file&&window.WORKSHOP_MEDIA[C.audio.file]){audio.src=window.WORKSHOP_MEDIA[C.audio.file];$('audio-status').textContent='已加载节目预览音乐';}
+    document.title = $('title').textContent = C.title;
+    $('spec').textContent = `${C.stage.width}×${C.stage.height} · ${C.fps} fps · 所有图层同尺寸带透明通道`;
+    C.parts.forEach((p, i) => $('part').add(new Option(p.name, i)));
+    $('bpm').value = bpm; $('width').value = C.stage.width; $('clip').checked = C.clipExportToStage;
+    const vw = Math.min(C.stage.width, C.previewMaxWidth); view.width = vw; view.height = Math.max(1, Math.round(vw * C.stage.height / C.stage.width));
+    setup(); $('width').oninput(); $('play').disabled = false; $('export-controls').disabled = false;
+    message('已就绪。可先拖动时间轴、切换段落或下载单张检查。');
+    // Stable inspection API for Codex: never mutates the selected preview part.
+    window.workshopAPI = {ready: true, config: C, frameCount: (id, rate = C.bpm) => W.count(C.parts.find(p => p.id === id), rate),
+      render: ({partId, frame: f = 0, layerIds, width = C.stage.width, bpm: rate = C.bpm, clip = false}) => {
+        const p = C.parts.find(p => p.id === partId); if (!p) throw new Error('未知段落');
+        const c = W.canvas(width, Math.max(1, Math.round(width * C.stage.height / C.stage.width)));
+        return W.render(c, {part: p, frame: f, bpm: rate, layerIds: layerIds || p.layers.filter(l => l.defaultVisible !== false).map(l => l.id), clip});
+      }};
+  } catch (e) {fail(e); message('初始化失败，请修正后重新开启。'); $('play').disabled = true; $('export-controls').disabled = true;}
+})();
+</script>
+</body></html>

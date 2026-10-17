@@ -1,0 +1,8 @@
+{
+  "generator": "stage-asset-workshop",
+  "projectId": "stage_demo",
+  "title": "舞台灵感实验室",
+  "width": 1920,
+  "height": 640,
+  "fps": 25
+}
