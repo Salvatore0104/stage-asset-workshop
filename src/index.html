@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>通用素材工坊</title>
+<link rel="icon" href="data:,">
+<style>
+:root{color-scheme:dark;font-family:system-ui,"Microsoft YaHei",sans-serif;background:#0e1020;color:#eeeaf7}
+*{box-sizing:border-box}body{margin:0;padding:26px}main{max-width:1480px;margin:auto}h1{font-size:23px;margin:0 0 8px}h2{font-size:16px;margin:0 0 15px;color:#a4e8ef}p{color:#aea8c1;line-height:1.65}button,input,select{font:inherit;border:1px solid #42435a;border-radius:7px;background:#202238;color:inherit;padding:8px}button{cursor:pointer}button:disabled{opacity:.45;cursor:default}button.primary{background:#ea88ac;color:#201327;border:0}label{display:inline-flex;gap:8px;align-items:center}input[type=number]{width:85px}input[type=range]{accent-color:#ea88ac}.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:18px 0}.bar .timeline{flex:1;min-width:170px}.stage{border:1px solid #42435a;border-radius:9px;overflow:hidden;background:repeating-conic-gradient(#191c2b 0 25%,#252839 0 50%) 0 0/18px 18px}canvas{display:block;width:100%;height:auto}.grid{display:grid;grid-template-columns:1fr 1.4fr;gap:18px;margin-top:18px}.card{padding:20px;background:#171a2d;border:1px solid #30354c;border-radius:10px}.layers{display:flex;flex-wrap:wrap;gap:14px}progress{width:100%;margin-top:16px;height:10px}.status{color:#eac78d;white-space:pre-wrap}small{color:#b2adc2}#export-controls{border:0;padding:0;margin:0;min-width:0}#export-controls:disabled{opacity:.55}#error{color:#ffb8b8}#tc{font-variant-numeric:tabular-nums}@media(max-width:800px){body{padding:14px}.grid{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1 id="title">素材工坊</h1><small id="spec"></small>
+<p>节目视觉预览与分层素材导出</p>
+<section class="card" id="show-settings"><div class="bar"><label>标题文字 <input id="show-text" type="text" style="width:240px"></label><label>副标题 <input id="show-subtitle" type="text" style="width:240px"></label><button id="save-settings">下载当前设置</button></div><div class="bar"><label>预览音乐 <input id="audio-file" type="file" accept="audio/*"></label><span id="audio-status">未选择音乐</span></div><small>本地选择的音乐仅在当前浏览器播放。播放和拖动时间轴会同步试听；WebM 预览不含音轨，正式合成请使用原音频。</small></section>
+<div class="bar" id="transport"><label>段落 <select id="part" aria-label="段落"></select></label><button id="play" disabled>播放</button><label>BPM <input id="bpm" type="number" min="1" max="999" step="0.1"></label><label>预览遮罩 <input id="mask" type="range" min="0" max="100" value="65"></label><input id="scrub" aria-label="时间轴" class="timeline" type="range" min="0" value="0" step="1"><small id="tc"></small></div>
+<div class="stage"><canvas id="view" width="960" height="320"></canvas></div>
+<div class="grid"><section class="card"><h2>预览图层</h2><div id="layers" class="layers"></div><p>勾选只改变预览。合成参考及预览视频依目前勾选输出；「全部制作图层」会逐层输出所有制作层，另加舞台遮罩及已启用的 PGM 遮罩。</p><div id="layer-info"></div></section>
+<section class="card"><h2>输出</h2><fieldset id="export-controls" disabled><div class="bar"><label>图层 <select id="export-layer"></select></label><label>输出宽度 <input id="width" type="number" min="1" step="1"></label><small id="output-size"></small></div><div class="bar"><label>起始帧 <input id="start" type="number" min="0" value="0" step="1"></label><label>结束帧 <input id="end" type="number" min="0" step="1"></label><label><input id="clip" type="checkbox">依舞台遮罩裁切输出</label></div><div class="bar"><button id="export" class="primary">导出 PNG 到文件夹</button><button id="still">下载目前单张 PNG</button><button id="record">录制预览 WebM</button></div></fieldset><button id="cancel" disabled>取消输出</button><progress id="progress" max="1" value="0"></progress><p id="status" class="status">加载中…</p><p>尺寸保持舞台比例；所有图层使用同一画布。PNG 序列为逐帧计算；WebM 为即时预览，可能掉帧。</p></section></div><p id="error" role="alert"></p>
+</main>
+<script>window.WORKSHOP_CONFIG=__CONFIG__;window.WORKSHOP_MEDIA={};</script>
+__PACKS__
+<script>__ENGINE__</script>
+<script>__SCENES__</script>
+<script>__APP__</script>
+</body></html>
