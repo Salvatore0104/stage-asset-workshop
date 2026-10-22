@@ -28,7 +28,8 @@ FOLDERS = {
 SPEC = "03_资产与需求/show.json"
 PROJECT_MEMORY = """## 素材工坊固定约定
 
-- 本项目相关素材统一使用 Wowidea CLI `--direct` 生成，不使用 Wowidea Canvas，不要求 Canvas OAuth，不直接调用第三方模型供应商。
+- 本项目相关素材统一使用已安装的 Wowidea CLI 生成。图片和视频走 CLI 默认的直接接口，命令里不要加 --direct，不要启动或操作无限画布，也不要直接调用第三方模型供应商。
+- 使用 Wowidea 前确认节目根目录有 `.wowidea/project.json`。没有则执行 `wowidea project init --dir . --name "节目名称"`。文件已存在或提示项目已存在时跳过，不要覆盖。
 - 先根据真实屏幕分辨率、遮罩、段落时长、音频和视觉需求规划素材；查询实时模型能力，保留生成原件，再等比适配屏幕。
 - 网页和项目说明使用简体中文；默认交付本地 HTML 工坊及源码，不自动部署到 GitHub 或其他外部服务。
 - 项目规格入口为 `03_资产与需求/show.json`。任务 ID、采用素材和进度分别写入 `成片ID记录.md`、`07_AE资产素材` 和 `进度.md`。
@@ -71,22 +72,114 @@ def decode(text):
         raise ValueError("CLI 未返回可识别的 JSON；请检查原任务，勿自动重复提交。")
 
 
-def cli(project):
+def wowidea_names():
+    if os.name == "nt":
+        return ["wowidea.cmd", "wowidea.exe", "wowidea"]
+    return ["wowidea"]
+
+
+def wowidea_from_path():
+    for name in wowidea_names():
+        found = shutil.which(name)
+        if found:
+            return [found]
+    return None
+
+
+def wowidea_prefix_dirs():
+    home = Path.home()
+    directories = [home / ".local" / "bin", home / ".local"]
+    npm = shutil.which("npm.cmd" if os.name == "nt" else "npm") or shutil.which("npm")
+    if npm:
+        try:
+            prefix = subprocess.check_output([npm, "prefix", "-g"], text=True, timeout=30, stderr=subprocess.DEVNULL).strip()
+        except (subprocess.SubprocessError, OSError):
+            prefix = ""
+        if prefix:
+            directories.extend([Path(prefix) / "bin", Path(prefix)])
+    return directories
+
+
+def wowidea_from_prefixes():
+    for directory in wowidea_prefix_dirs():
+        for name in wowidea_names():
+            candidate = directory / name
+            if candidate.is_file():
+                return [str(candidate)]
+    return None
+
+
+def wowidea_from_checkout():
+    home = Path(os.environ.get("WOWIDEA_CLI_HOME", Path.home() / ".wowidea-cli"))
+    cli_js = home / "dist" / "cli.js"
+    node = shutil.which("node")
+    if cli_js.is_file() and node:
+        return [node, str(cli_js)]
+    return None
+
+
+def wowidea_vendored(project):
+    node = shutil.which("node")
     candidates = [project / "05_素材工坊/.wowidea/runtime/dist/cli.js",
                   project / "05_素材工坊/.tools/wowidea/dist/cli.js",
                   project / "05_素材工坊/.tools/wowidea/node_modules/@easyai/cli/dist/cli.js",
                   KIT / ".tools/wowidea/node_modules/@easyai/cli/dist/cli.js"]
-    node = shutil.which("node")
     for path in candidates:
         if path.is_file() and node:
             return [node, str(path)]
-    executable = shutil.which("wowidea.cmd" if os.name == "nt" else "wowidea")
-    if executable:
-        bundled = Path(executable).parent / 'node_modules/@easyai/cli/dist/cli.js'
-        if bundled.is_file() and node:
-            return [node, str(bundled)]
-        return [executable]
-    raise RuntimeError("未找到 Wowidea CLI。先运行 scripts/install.py，或安装 @easyai/cli 并完成账号初始化。")
+    return None
+
+
+def find_wowidea(project=None):
+    """优先使用官方安装放到 PATH、用户目录或 ~/.wowidea-cli 的命令。"""
+    for finder in (wowidea_from_path, wowidea_from_prefixes, wowidea_from_checkout):
+        found = finder()
+        if found:
+            return found
+    if project is not None:
+        return wowidea_vendored(Path(project))
+    return None
+
+
+def cli(project):
+    found = find_wowidea(project)
+    if found:
+        return found
+    raise RuntimeError("未找到 Wowidea CLI。先运行 scripts/install.py；未安装时会调用 wowidea-cli 官方安装脚本（macOS/Linux 为 scripts/install.sh，Windows 为 scripts/install.ps1）。")
+
+
+def wowidea_project_file(project):
+    return Path(project) / ".wowidea" / "project.json"
+
+
+def ensure_wowidea_project(project, name):
+    """没有 .wowidea/project.json 时执行 project init。已存在则跳过，不覆盖。"""
+    project = Path(project)
+    marker = wowidea_project_file(project)
+    if marker.is_file():
+        print(f"Wowidea 项目已存在：{marker}。跳过 project init，不会覆盖。")
+        return marker
+    command = cli(project) + ["project", "init", "--dir", str(project), "--name", name, "--json"]
+    try:
+        run(command, timeout=120)
+    except RuntimeError:
+        if marker.is_file():
+            print(f"Wowidea 项目已存在：{marker}。跳过 project init，不会覆盖。")
+            return marker
+        raise
+    print(f"已初始化 Wowidea 项目：{project}")
+    return marker
+
+
+def usage_prompt():
+    return (KIT / "docs/使用提示词.txt").read_text(encoding="utf-8").strip() + "\n"
+
+
+def print_usage_prompt():
+    print("把下面这段提示词复制给 AI 助手：")
+    print("-----")
+    print(usage_prompt(), end="")
+    print("-----")
 
 
 def model_info(project, model):
@@ -209,15 +302,15 @@ def init_project(args):
     else:
         memory.write_text('# 项目记忆\n\n' + PROJECT_MEMORY, encoding='utf-8')
     (project / '00_项目简报.md').write_text(f'# {args.name}｜项目简报\n\n- 节目代号：{args.id}\n- 正式画布：{args.width}×{args.height}\n- FPS：{args.fps}\n- BPM：{args.bpm}\n- 初始时长：{args.duration} 秒\n- 配置：[show.json](03_资产与需求/show.json)\n- 目录说明：[项目目录说明.md](项目目录说明.md)\n\n'+('已导入遮罩。\n' if mask_file else '**尚未提供遮罩，暂用全画布；正式舞台映射尚未验收。**\n'), encoding='utf-8')
-    (project / '项目目录说明.md').write_text('# 项目目录说明\n\n' + '\n'.join(f'- `{k}/`：{v}' for k, v in FOLDERS.items()) + '\n\n配置入口：`03_资产与需求/show.json`。工坊入口：`05_素材工坊/scripts/workshop.py`。交付网页在 `04_输出交付/<版本>/web/index.html`。\n', encoding='utf-8')
+    (project / '项目目录说明.md').write_text('# 项目目录说明\n\n' + '\n'.join(f'- `{k}/`：{v}' for k, v in FOLDERS.items()) + '\n\n配置入口：`03_资产与需求/show.json`。工坊入口：`05_素材工坊/scripts/workshop.py`。交付网页在 `04_输出交付/<版本>/web/index.html`。\nWowidea 项目文件：`.wowidea/project.json`。没有该文件时执行 `wowidea project init --dir . --name "节目名称"`；已存在则不要覆盖。\n', encoding='utf-8')
     for filename, heading in [('00_子对话说明.md', '交接说明'), ('进度.md', '制作进度'), ('成片ID记录.md', '成片与任务 ID 记录'), ('制作方案.md', '制作方案')]:
         p = project / filename
         if not p.exists():
-            p.write_text(f'# {heading}\n\n项目已初始化。先读取 `项目记忆.md`、`00_项目简报.md`、`项目目录说明.md` 和 `03_资产与需求/show.json`。素材使用 Wowidea CLI `--direct`，不使用 Canvas；默认交付本地工坊。\n', encoding='utf-8')
+            p.write_text(f'# {heading}\n\n项目已初始化。先读取 `项目记忆.md`、`00_项目简报.md`、`项目目录说明.md` 和 `03_资产与需求/show.json`。确认 `.wowidea/project.json` 已存在；没有则 `wowidea project init`，已有则不要覆盖。素材使用 Wowidea CLI 默认直接接口，不要加 --direct，不要操作无限画布；默认交付本地工坊。\n', encoding='utf-8')
     skill = KIT / 'skills/stage-asset-workshop'
     if skill.is_dir():
         shutil.copytree(skill, project / '.agents/skills/stage-asset-workshop', dirs_exist_ok=True)
-    (project / 'AGENTS.md').write_text('# 节目素材工坊\n\n先读 `项目记忆.md`、`00_项目简报.md` 和 `03_资产与需求/show.json`。按 `.agents/skills/stage-asset-workshop/SKILL.md` 工作。网页使用简体中文；原始素材保留；任务 ID 和进度写回根目录文档。使用 Wowidea CLI --direct，不使用 Canvas，不自行绕过平台调用供应商。默认交付本地 HTML 工坊，未经后续明确要求不执行外部部署。\n', encoding='utf-8')
+    (project / 'AGENTS.md').write_text('# 节目素材工坊\n\n先读 `项目记忆.md`、`00_项目简报.md` 和 `03_资产与需求/show.json`。按 `.agents/skills/stage-asset-workshop/SKILL.md` 工作。网页使用简体中文；原始素材保留；任务 ID 和进度写回根目录文档。使用 Wowidea CLI 的默认直接接口，不要加 --direct，不要操作无限画布，不自行绕过平台调用供应商。目录里没有 `.wowidea/project.json` 时才执行 `wowidea project init`，已存在不要覆盖。默认交付本地 HTML 工坊，未经后续明确要求不执行外部部署。\n', encoding='utf-8')
     print(f'已初始化：{project}\n配置：{project / SPEC}\n下一步：编辑段落、屏幕区域及视觉需求，运行 plan。')
 
 
@@ -289,10 +382,7 @@ def generate(project):
     from PIL import Image
     show = load_project(project)
     jobs = plan(project)['jobs']
-    runtime = project / '05_素材工坊'
-    runtime.mkdir(parents=True, exist_ok=True)
-    setup = decode(run(cli(project) + ['--json', 'project', 'setup', '--dir', runtime, '--name', show['name'], '--no-canvas'], timeout=300))
-    # User-selected CLI direct mode; local setup never creates a remote Canvas.
+    ensure_wowidea_project(project, show['name'])
     for job in jobs:
         record_path = project / f"07_AE资产素材/生成记录/{job['id']}.json"
         adapted = project / f"07_AE资产素材/适配素材/{job['partId']}_{job['screenId']}_{job['id']}.png"
@@ -320,8 +410,8 @@ def generate(project):
                   'requestedResolution': job['request']['resolution']}
         write(record_path, record)
         try:
-            envelope = decode(run(cli(project) + ['--json','image','generate','--direct','--file',request_path,
-                                  '--project-dir',runtime,'--dir',project/'07_AE资产素材/生成原件'], timeout=3600))
+            envelope = decode(run(cli(project) + ['--json', 'image', 'generate', '--file', request_path,
+                                  '--project-dir', str(project), '--dir', str(project / '07_AE资产素材/生成原件')], timeout=3600))
             data = envelope.get('data', envelope)
             record['result'] = data
             paths = data.get('paths') or []
@@ -349,8 +439,8 @@ def generate(project):
             write(project/SPEC,show)
             write(record_path,record)
             with (project/'成片ID记录.md').open('a',encoding='utf-8') as stream:
-                stream.write(f"\n- {job['partId']}/{job['screenId']}：CLI direct 任务 `{record.get('taskId')}`，记录 `{record_path.relative_to(project).as_posix()}`\n")
-            print(f"素材完成：{adapted}\nCLI 任务：{record.get('taskId')}\n计费：{record['billing']}")
+                stream.write(f"\n- {job['partId']}/{job['screenId']}：Wowidea 任务 `{record.get('taskId')}`，记录 `{record_path.relative_to(project).as_posix()}`\n")
+            print(f"素材完成：{adapted}\nWowidea 任务：{record.get('taskId')}\n计费：{record['billing']}")
         except Exception as error:
             record.update(status='needs_attention', diagnostic=str(error))
             write(record_path,record)
@@ -473,7 +563,7 @@ def deploy(project, directory, repository):
         for path in directory.rglob('*'):
             if path.is_file():
                 rel=path.relative_to(directory)
-                # The build contains only runtime code/media, never Canvas auth or raw task records.
+                # The build contains only runtime code/media, never CLI credentials or raw task records.
                 if any(p.startswith('.') and p!='.nojekyll' for p in rel.parts):
                     continue
                 target=checkout/rel;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(path,target)

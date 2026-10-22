@@ -1,0 +1,26 @@
+请用节目素材工坊（stage-asset-workshop）配合 wowidea-cli 制作节目素材。网页和项目说明使用简体中文。每次进入一个节目目录之前先做初始化检查：缺什么补什么，已经有的不要覆盖。
+
+初始化检查：
+1. 节目工坊：目录中要有 03_资产与需求/show.json。没有，就在素材工坊仓库运行 scripts/install.py。已有 show.json 时跳过工坊初始化，不要覆盖。
+2. wowidea-cli：同一节目根目录要有 .wowidea/project.json。没有再执行 init。如果提示项目已存在，说明已经初始化过，直接继续使用，不要再次执行 init。
+
+安装素材工坊时，安装器会先检测 wowidea 命令。未安装则按官方脚本安装：macOS / Linux 使用 wowidea-cli 的 scripts/install.sh，Windows 使用 scripts/install.ps1。已经安装则跳过安装，只初始化项目。密钥只放在环境变量 WOWIDEA_API_KEY，不要写进仓库，不要贴进聊天。
+
+wowidea 初始化（在节目根目录执行，把名称换成实际节目名）：
+wowidea project init --dir . --name "节目名称"
+
+素材工坊命令（在节目根目录执行。Python 用 05_素材工坊/.venv：Windows 为 Scripts\python.exe，macOS / Linux 为 bin/python）：
+python 05_素材工坊/scripts/workshop.py plan --project .
+python 05_素材工坊/scripts/workshop.py generate --project .
+python 05_素材工坊/scripts/workshop.py build --project .
+
+wowidea-cli 常用命令：
+wowidea capabilities --brief
+wowidea doctor --json
+wowidea models show "Nano Banana 2" --json
+wowidea project show --dir .
+wowidea image generate --file 请求.json --project-dir . --dir 07_AE资产素材/生成原件 --json
+
+生成默认走直接接口。不要加 --direct，不要启动或操作无限画布，不要改走网页手工出图。
+
+典型流程：先读 项目记忆.md、00_项目简报.md、00_子对话说明.md、项目目录说明.md 和 03_资产与需求/show.json，并确认 .wowidea/project.json 已在。按真实分辨率、遮罩、段落和风格修改 show.json。运行 plan（只出计划，不付费），核对每块屏幕的生成比例和任务数。确认后再 generate：逐项提交一次，保留任务 ID 和下载原件，再按 cover 或 contain 适配到正式像素。然后 build，打开 04_输出交付/<版本>/web/index.html。在本机用 localhost 验证持续播放、暂停、时间轴拖动和循环。默认交付本地 HTML 和源码；只有用户明确要求时才部署。比例不符、认证失败或任务状态不明时停止并报告原任务，不要自动重新付费生成。

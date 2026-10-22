@@ -30,10 +30,19 @@ class WorkshopTests(unittest.TestCase):
         self.assertTrue((self.root/'.agents/skills/stage-asset-workshop/SKILL.md').is_file())
         self.assertTrue((self.root/'05_素材工坊/scripts/workshop.py').is_file())
         memory=(self.root/'项目记忆.md').read_text(encoding='utf-8')
-        self.assertIn('Wowidea CLI `--direct`',memory)
+        self.assertIn('不要加 --direct',memory)
+        self.assertIn('.wowidea/project.json',memory)
         self.assertIn('默认交付本地 HTML',memory)
-        self.assertIn('项目记忆.md',(self.root/'AGENTS.md').read_text(encoding='utf-8'))
+        self.assertNotIn('--no-canvas',memory)
+        agents=(self.root/'AGENTS.md').read_text(encoding='utf-8')
+        self.assertIn('项目记忆.md',agents)
+        self.assertIn('不要加 --direct',agents)
         self.assertIn('项目记忆.md',(self.root/'00_子对话说明.md').read_text(encoding='utf-8'))
+        prompt=w.usage_prompt().strip()
+        self.assertIn(prompt,(ROOT/'README.md').read_text(encoding='utf-8'))
+        self.assertIn('scripts/install.sh',prompt)
+        self.assertIn('scripts/install.ps1',prompt)
+        self.assertIn('project init',prompt)
 
     def test_ratio_selection_uses_model_capabilities(self):
         self.assertEqual(w.choose_ratio(7800,1000,['1:1','4:1','8:1']),'8:1')
@@ -77,15 +86,49 @@ class WorkshopTests(unittest.TestCase):
         source=self.root/'result.png';Image.new('RGBA',(640,360),'blue').save(source)
         calls=[]
         def fake_run(command,**kwargs):
+            calls.append(command)
             if 'generate' in command:
-                calls.append(command)
-                return json.dumps({'data':{'paths':[str(source)],'taskId':'mock-id','canvasUrl':'https://example.invalid/canvas'}})
+                return json.dumps({'data':{'paths':[str(source)],'taskId':'mock-id'}})
             return json.dumps({'data':{}})
         with patch.object(w,'model_info',return_value=CAP),patch.object(w,'cli',return_value=['mock']),patch.object(w,'run',side_effect=fake_run):
             w.generate(self.root);w.generate(self.root)
-        self.assertEqual(len(calls),1)
-        self.assertIn('--direct',calls[0])
+        generated=[command for command in calls if 'generate' in command]
+        self.assertEqual(len(generated),1)
+        self.assertNotIn('--direct',generated[0])
+        self.assertNotIn('--no-canvas',generated[0])
+        self.assertIn(str(self.root),generated[0])
+        self.assertTrue(any(command[1:3]==['project','init'] for command in calls))
         self.assertTrue(w.load_project(self.root)['parts'][0]['backgrounds']['main'].endswith('.png'))
+
+    def test_existing_wowidea_project_skips_init(self):
+        marker=self.root/'.wowidea'/'project.json'
+        marker.parent.mkdir()
+        marker.write_text('{"keep":true}',encoding='utf-8')
+        source=self.root/'result.png';Image.new('RGBA',(640,360),'blue').save(source)
+        calls=[]
+        def fake_run(command,**kwargs):
+            calls.append(command)
+            if 'generate' in command:
+                return json.dumps({'data':{'paths':[str(source)],'taskId':'mock-id'}})
+            return json.dumps({'data':{}})
+        with patch.object(w,'model_info',return_value=CAP),patch.object(w,'cli',return_value=['mock']),patch.object(w,'run',side_effect=fake_run):
+            w.generate(self.root)
+        self.assertFalse(any('init' in command for command in calls))
+        self.assertEqual(marker.read_text(encoding='utf-8'),'{"keep":true}')
+
+    def test_init_conflict_does_not_overwrite(self):
+        marker=w.wowidea_project_file(self.root)
+        def fake_run(command,**kwargs):
+            marker.parent.mkdir(parents=True,exist_ok=True)
+            marker.write_text('{"name":"kept"}',encoding='utf-8')
+            raise RuntimeError('命令失败（退出码 4）')
+        with patch.object(w,'cli',return_value=['mock']),patch.object(w,'run',side_effect=fake_run):
+            w.ensure_wowidea_project(self.root,'测试节目')
+        self.assertEqual(marker.read_text(encoding='utf-8'),'{"name":"kept"}')
+
+    def test_find_wowidea_prefers_path_command(self):
+        with patch.object(w.shutil,'which',side_effect=lambda name: '/usr/local/bin/wowidea' if name=='wowidea' else None):
+            self.assertEqual(w.find_wowidea(),['/usr/local/bin/wowidea'])
 
     def test_generation_mismatch_never_auto_rerolls(self):
         source=self.root/'bad.png';Image.new('RGBA',(100,100),'blue').save(source)
