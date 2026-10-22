@@ -21,6 +21,6 @@ wowidea models show "Nano Banana 2" --json
 wowidea project show --dir .
 wowidea image generate --file 请求.json --project-dir . --dir 07_AE资产素材/生成原件 --json
 
-生成默认走直接接口。不要加 --direct，不要启动或操作无限画布，不要改走网页手工出图。
+生成使用 wowidea-cli 的默认直接接口。读取返回中的任务 ID 和已下载文件。
 
 典型流程：先读 项目记忆.md、00_项目简报.md、00_子对话说明.md、项目目录说明.md 和 03_资产与需求/show.json，并确认 .wowidea/project.json 已在。按真实分辨率、遮罩、段落和风格修改 show.json。运行 plan（只出计划，不付费），核对每块屏幕的生成比例和任务数。确认后再 generate：逐项提交一次，保留任务 ID 和下载原件，再按 cover 或 contain 适配到正式像素。然后 build，打开 04_输出交付/<版本>/web/index.html。在本机用 localhost 验证持续播放、暂停、时间轴拖动和循环。默认交付本地 HTML 和源码；只有用户明确要求时才部署。比例不符、认证失败或任务状态不明时停止并报告原任务，不要自动重新付费生成。
