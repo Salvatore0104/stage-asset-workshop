@@ -20,7 +20,7 @@ python scripts/install.py --target "【节目目录】" --name "【节目名称�
 
 无音频／遮罩时省略对应参数；Alpha 遮罩用 `--mask-channel alpha`，反相加 `--mask-invert`。
 
-安装器先检测本机能否运行 `wowidea`。没有则按 wowidea-cli 官方方式安装。已经安装则跳过 CLI 安装，不重复执行官方脚本，然后仍然初始化项目。两条路径结束时都打印同一段使用提示词。
+安装器先检测本机能否运行 `wowidea`。没有则按 wowidea-cli 官方方式安装。已经安装则跳过 CLI 安装，不重复执行官方脚本，然后仍然初始化项目。两条路径结束时都打印首次安装话术。
 
 - macOS / Linux：`curl -fsSL https://raw.githubusercontent.com/Salvatore0104/wowidea-cli/master/scripts/install.sh | bash`
 - Windows PowerShell：`irm https://raw.githubusercontent.com/Salvatore0104/wowidea-cli/master/scripts/install.ps1 | iex`
@@ -31,7 +31,7 @@ python scripts/install.py --target "【节目目录】" --name "【节目名称�
 
 安装器会建立项目私有 Python 环境并安装 Pillow。新节目会创建 `项目记忆.md`，记录“素材使用 Wowidea CLI 默认直接接口、不要加 --direct、不要操作无限画布、默认本地交付”，并由 AGENTS.md 和交接说明引导后续 AI 读取；已有项目保留原记忆，不整文件覆盖。创建成功后，**向用户展示实际生成的目录树和每个目录用途**，给出配置文件、工坊源代码和交付网页位置；不要只说“已初始化”。
 
-安装成功结束时会打印一段简体中文初始化提示词。全文与 [README](README.md) 的「新建项目与对话时的初始化提示词」相同，也保存在 [docs/使用提示词.txt](docs/使用提示词.txt)。新建节目并新开 AI 对话时，把整段粘贴到新对话的第一条消息。
+安装成功结束时会打印 [docs/prompts/首次安装.txt](docs/prompts/首次安装.txt)。新建节目并新开 AI 对话时，把该文件整段粘贴到新对话的第一条消息。更新已有节目用 [docs/prompts/更新.txt](docs/prompts/更新.txt)，发布网页用 [docs/prompts/部署.txt](docs/prompts/部署.txt)。
 
 ## 3. 填入节目资料
 

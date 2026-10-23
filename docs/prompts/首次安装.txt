@@ -1,0 +1,16 @@
+素材工坊已安装。现在新建一个节目，并新开这次对话。先初始化这个节目，再用 stage-asset-workshop 和 wowidea-cli。网页和说明用简体中文。
+
+确认节目目录、名称、分辨率、时长、遮罩、音频和风格。能从文件读到的自己确认。缺的补上。已经有的不要覆盖。
+
+没有 03_资产与需求/show.json：在素材工坊仓库运行 scripts/install.py，传入目录、名称、宽高和时长。已有则跳过，不要覆盖。
+没有 .wowidea/project.json：在节目根目录执行 wowidea project init --dir . --name "节目名称"。已有，或提示项目已存在，就跳过，不要覆盖。
+wowidea 未安装：macOS / Linux 用 wowidea-cli 的 scripts/install.sh，Windows 用 scripts/install.ps1。已经安装则不要重装。密钥只放环境变量 WOWIDEA_API_KEY，不要写进仓库，不要贴进聊天。
+
+在节目根目录执行。Python 用 05_素材工坊/.venv：Windows 为 Scripts\python.exe，macOS / Linux 为 bin/python。
+python 05_素材工坊/scripts/workshop.py plan --project .
+python 05_素材工坊/scripts/workshop.py generate --project .
+python 05_素材工坊/scripts/workshop.py build --project .
+
+生成使用 wowidea-cli 的默认直接接口。不要加 --direct，不要操作无限画布。
+先 plan，只出计划，不付费。确认后再 generate：每项提交一次，保留任务 ID 和下载原件，再按 cover 或 contain 适配到正式像素。然后 build，打开 04_输出交付/<版本>/web/index.html。用 localhost 检查持续播放、暂停、时间轴和循环。
+默认只交付本地 HTML 和源码。比例不符、认证失败或任务状态不明时停止并报告原任务，不要重新付费生成。

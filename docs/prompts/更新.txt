@@ -1,0 +1,9 @@
+已有素材工坊，也已有节目。这次只更新，不新建项目，不要覆盖节目资料。网页和说明用简体中文。
+
+先读 项目记忆.md、00_项目简报.md、项目目录说明.md 和 03_资产与需求/show.json。
+
+拉取新的素材工坊后，只把其中的 src、tools、scripts、docs、skills 同步到节目的 05_素材工坊，并更新 .agents/skills/stage-asset-workshop。保留 .venv、show.json、项目记忆、遮罩、音频、生成原件、任务记录和已交付网页。requirements.txt 有变时，用 05_素材工坊/.venv 执行 pip install -r requirements.txt。
+
+不要再跑工坊 init。已有 .wowidea/project.json 就不要再 project init。wowidea 已能运行就不要重装；只有用户明确要求升级 CLI 时才用官方安装脚本。密钥只放环境变量 WOWIDEA_API_KEY。
+
+生成仍用 wowidea-cli 的默认直接接口。不要加 --direct，不要操作无限画布。不要因为更新而重新 generate。需要新网页时只 build，用 localhost 检查播放、暂停、时间轴和循环。用户没有明确要求时不要部署。

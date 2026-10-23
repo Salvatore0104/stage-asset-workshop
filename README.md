@@ -44,11 +44,11 @@ python scripts/install.py --target ../我的节目 --name "我的节目" --id my
 - macOS / Linux：`curl -fsSL https://raw.githubusercontent.com/Salvatore0104/wowidea-cli/master/scripts/install.sh | bash`
 - Windows PowerShell：`irm https://raw.githubusercontent.com/Salvatore0104/wowidea-cli/master/scripts/install.ps1 | iex`
 
-已经安装时，跳过 CLI 安装，不重复执行官方脚本。无论 CLI 是刚装上还是本来就有，安装器都会继续做下面的初始化，并且在结束时打印「新建项目与对话时的初始化提示词」。
+已经安装时，跳过 CLI 安装，不重复执行官方脚本。无论 CLI 是刚装上还是本来就有，安装器都会继续做下面的初始化，并且在结束时打印首次安装话术。
 
 1. 目标目录还没有 `03_资产与需求/show.json` 时，创建标准节目目录，并在 `05_素材工坊/.venv` 安装 Python 依赖。已经有 `show.json` 时，跳过工坊初始化，不覆盖现有目录和配置。
 2. 节目根目录还没有 `.wowidea/project.json` 时，执行 `wowidea project init --dir <节目目录> --name "<节目名称>"`。该文件已存在，或 init 提示项目已存在时，跳过，不覆盖。
-3. 安装成功结束时打印初始化提示词。新建节目、新开 AI 对话时，把这段整段粘贴进新对话。详见下方「新建项目与对话时的初始化提示词」。
+3. 安装成功结束时打印首次安装话术。新建节目、新开 AI 对话时，把 [docs/prompts/首次安装.txt](docs/prompts/首次安装.txt) 整段粘贴进新对话。
 
 本机已有 `wowidea`、且不希望在缺失时自动安装，可以加上 `--skip-wowidea`。此时找不到命令会停止，不会改写项目。
 
@@ -83,42 +83,11 @@ python 05_素材工坊/scripts/workshop.py all --project .
 python -m http.server 8765 --bind 127.0.0.1 --directory "04_输出交付/<版本>/web"
 ```
 
-## 新建项目与对话时的初始化提示词
+## 话术提示词
 
-素材工坊安装成功后，终端会打印下面这段文字。源文件是 [docs/使用提示词.txt](docs/使用提示词.txt)，安装成功时一定会打印。
-
-使用时机是：安装已经完成，要新建一个节目项目，并新开一个 AI 对话。把整段粘贴到新对话的第一条消息里，让 AI 初始化这个节目，并知道如何用 stage-asset-workshop 配合 wowidea-cli。同一节目后面的对话先读该目录的 `项目记忆.md`，不必每次重贴。
-
-```text
-这是节目素材工坊的对话初始化提示词。使用时机：素材工坊已经安装完成，现在要新建一个节目项目，并新开一个 AI 对话。请把本段当作这次新对话的第一条说明：先正确初始化这个节目，再按这里的方式使用 stage-asset-workshop 和 wowidea-cli。网页和项目说明使用简体中文。
-
-先确认节目目录、名称、分辨率、时长、遮罩、音频和风格。能从已有文件读到的自行确认。缺什么补什么，已经初始化过的不要覆盖。
-
-初始化检查：
-1. 节目工坊：目标目录要有 03_资产与需求/show.json。没有，就在素材工坊仓库运行 scripts/install.py，传入目录、名称、宽高和时长。已有 show.json 时跳过工坊初始化，不要覆盖。
-2. wowidea-cli：同一节目根目录要有 .wowidea/project.json。没有再执行 init。如果提示项目已存在，说明这个目录已经初始化过，直接继续使用，不要再次执行 init。
-
-wowidea 未安装时，先按官方脚本安装：macOS / Linux 使用 wowidea-cli 的 scripts/install.sh，Windows 使用 scripts/install.ps1。已经安装则不要重装。密钥只放在环境变量 WOWIDEA_API_KEY，不要写进仓库，不要贴进聊天。
-
-wowidea 初始化（在节目根目录执行，把名称换成实际节目名）：
-wowidea project init --dir . --name "节目名称"
-
-素材工坊命令（在节目根目录执行。Python 用 05_素材工坊/.venv：Windows 为 Scripts\python.exe，macOS / Linux 为 bin/python）：
-python 05_素材工坊/scripts/workshop.py plan --project .
-python 05_素材工坊/scripts/workshop.py generate --project .
-python 05_素材工坊/scripts/workshop.py build --project .
-
-wowidea-cli 常用命令：
-wowidea capabilities --brief
-wowidea doctor --json
-wowidea models show "Nano Banana 2" --json
-wowidea project show --dir .
-wowidea image generate --file 请求.json --project-dir . --dir 07_AE资产素材/生成原件 --json
-
-生成使用 wowidea-cli 的默认直接接口。读取返回中的任务 ID 和已下载文件。
-
-典型流程：先读 项目记忆.md、00_项目简报.md、00_子对话说明.md、项目目录说明.md 和 03_资产与需求/show.json，并确认 .wowidea/project.json 已在。按真实分辨率、遮罩、段落和风格修改 show.json。运行 plan（只出计划，不付费），核对每块屏幕的生成比例和任务数。确认后再 generate：逐项提交一次，保留任务 ID 和下载原件，再按 cover 或 contain 适配到正式像素。然后 build，打开 04_输出交付/<版本>/web/index.html。在本机用 localhost 验证持续播放、暂停、时间轴拖动和循环。默认交付本地 HTML 和源码；只有用户明确要求时才部署。比例不符、认证失败或任务状态不明时停止并报告原任务，不要自动重新付费生成。
-```
+- [首次安装](docs/prompts/首次安装.txt)：工坊刚装好，新建节目并新开 AI 对话时粘贴。
+- [更新](docs/prompts/更新.txt)：更新已有工坊或已有节目时粘贴。
+- [部署](docs/prompts/部署.txt)：要发布节目网页时粘贴。
 
 ## 开发与演示构建
 
