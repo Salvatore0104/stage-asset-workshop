@@ -171,14 +171,18 @@ def ensure_wowidea_project(project, name):
     return marker
 
 
-def usage_prompt():
-    return (KIT / "docs/使用提示词.txt").read_text(encoding="utf-8").strip() + "\n"
+def first_install_prompt_path():
+    return KIT / "docs/prompts/首次安装.txt"
+
+
+def first_install_prompt():
+    return first_install_prompt_path().read_text(encoding="utf-8").strip() + "\n"
 
 
 def print_usage_prompt():
-    print("安装完成。新建节目并新开一个 AI 对话时，把下面这段初始化提示词整段粘贴进去：")
+    print(f"安装完成。新建节目并新开一个 AI 对话时，把首次安装话术整段粘贴进去：{first_install_prompt_path()}")
     print("-----")
-    print(usage_prompt(), end="")
+    print(first_install_prompt(), end="")
     print("-----")
 
 

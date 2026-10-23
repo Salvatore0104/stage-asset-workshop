@@ -144,7 +144,8 @@ class InstallTests(unittest.TestCase):
             self.assertEqual(init_calls[0][1:3], ["project", "init"])
             self.assertIn(str(target.resolve()), init_calls[0])
             self.assertIn("测试节目", init_calls[0])
-            self.assertIn(install.workshop.usage_prompt().strip(), text)
+            self.assertIn(install.workshop.first_install_prompt().strip(), text)
+            self.assertIn("docs/prompts/首次安装.txt", text)
 
     def test_already_installed_cli_skips_existing_project_and_still_prints_prompt(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -173,7 +174,8 @@ class InstallTests(unittest.TestCase):
             self.assertEqual(runner_calls, [])
             prepare.assert_not_called()
             self.assertIn("跳过 project init，不会覆盖", buffer.getvalue())
-            self.assertIn(install.workshop.usage_prompt().strip(), buffer.getvalue())
+            self.assertIn(install.workshop.first_install_prompt().strip(), buffer.getvalue())
+            self.assertIn("docs/prompts/首次安装.txt", buffer.getvalue())
 
 
 if __name__ == "__main__":
