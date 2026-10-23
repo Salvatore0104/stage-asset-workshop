@@ -50,7 +50,7 @@ def require_install_tools(platform=None):
 def ensure_wowidea_cli(skip=False, runner=subprocess.run, platform=None):
     found = workshop.find_wowidea()
     if found:
-        print(f"已检测到 Wowidea CLI：{' '.join(found)}。跳过安装。")
+        print(f"已检测到 Wowidea CLI：{' '.join(found)}。跳过安装，继续初始化项目。")
         return found
     if skip:
         raise RuntimeError("未找到 wowidea。已指定 --skip-wowidea，不会自动安装。请先安装 wowidea-cli，或去掉该参数。")
@@ -99,9 +99,9 @@ def workshop_init_command(target, args, python):
     return command
 
 
-def install_project(args, runner=subprocess.run):
-    target = Path(args.target).resolve()
-    ensure_wowidea_cli(skip=args.skip_wowidea, runner=runner)
+def initialize_project(target, args, runner=subprocess.run):
+    """CLI 刚装好或本来就有，都走这里。已有节目或 wowidea 项目则跳过，不覆盖。"""
+    target = Path(target)
     if workshop_ready(target):
         print(f"节目目录已初始化：{target / '03_资产与需求/show.json'}。跳过工坊 init，不会覆盖。")
         if not venv_python(target).exists():
@@ -109,10 +109,18 @@ def install_project(args, runner=subprocess.run):
     else:
         python = prepare_python(target, runner)
         runner(workshop_init_command(target, args, python), check=True)
+    # 已安装 wowidea 时同样初始化：没有 .wowidea/project.json 才 project init。
     workshop.ensure_wowidea_project(target, args.name)
     python = venv_python(target)
     print(f"安装完成。运行入口：{python} {target / '05_素材工坊/scripts/workshop.py'}")
-    print("先读取根目录的项目目录说明.md。生成使用 Wowidea CLI 的默认直接接口，不要加 --direct，不要操作无限画布。")
+    print("先读取根目录的项目目录说明.md。生成使用 Wowidea CLI 的默认直接接口。")
+    return python
+
+
+def install_project(args, runner=subprocess.run):
+    target = Path(args.target).resolve()
+    ensure_wowidea_cli(skip=args.skip_wowidea, runner=runner)
+    initialize_project(target, args, runner)
     workshop.print_usage_prompt()
 
 

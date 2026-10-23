@@ -4,7 +4,7 @@
 1. 节目工坊：目录中要有 03_资产与需求/show.json。没有，就在素材工坊仓库运行 scripts/install.py。已有 show.json 时跳过工坊初始化，不要覆盖。
 2. wowidea-cli：同一节目根目录要有 .wowidea/project.json。没有再执行 init。如果提示项目已存在，说明已经初始化过，直接继续使用，不要再次执行 init。
 
-安装素材工坊时，安装器会先检测 wowidea 命令。未安装则按官方脚本安装：macOS / Linux 使用 wowidea-cli 的 scripts/install.sh，Windows 使用 scripts/install.ps1。已经安装则跳过安装，只初始化项目。密钥只放在环境变量 WOWIDEA_API_KEY，不要写进仓库，不要贴进聊天。
+安装素材工坊时，安装器会先检测 wowidea 命令。未安装则按官方脚本安装：macOS / Linux 使用 wowidea-cli 的 scripts/install.sh，Windows 使用 scripts/install.ps1。已经安装则跳过 CLI 安装，仍然初始化：没有 .wowidea/project.json 就执行 wowidea project init，已有则跳过且不覆盖。两条路径结束时都打印这段提示词。密钥只放在环境变量 WOWIDEA_API_KEY，不要写进仓库，不要贴进聊天。
 
 wowidea 初始化（在节目根目录执行，把名称换成实际节目名）：
 wowidea project init --dir . --name "节目名称"

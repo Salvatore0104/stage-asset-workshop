@@ -20,7 +20,7 @@ python scripts/install.py --target "【节目目录】" --name "【节目名称�
 
 无音频／遮罩时省略对应参数；Alpha 遮罩用 `--mask-channel alpha`，反相加 `--mask-invert`。
 
-安装器先检测本机能否运行 `wowidea`。没有则按 wowidea-cli 官方方式安装，再初始化项目；已经安装则跳过安装，只做初始化。
+安装器先检测本机能否运行 `wowidea`。没有则按 wowidea-cli 官方方式安装。已经安装则跳过 CLI 安装，不重复执行官方脚本，然后仍然初始化项目。两条路径结束时都打印同一段使用提示词。
 
 - macOS / Linux：`curl -fsSL https://raw.githubusercontent.com/Salvatore0104/wowidea-cli/master/scripts/install.sh | bash`
 - Windows PowerShell：`irm https://raw.githubusercontent.com/Salvatore0104/wowidea-cli/master/scripts/install.ps1 | iex`

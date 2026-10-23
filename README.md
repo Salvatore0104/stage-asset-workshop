@@ -39,18 +39,16 @@ python scripts/install.py --target ../我的节目 --name "我的节目" --id my
 
 ### 安装器如何检测、安装和初始化
 
-安装器按下面的顺序执行。已经完成的步骤会跳过，不会覆盖已有项目。
+安装器先检测本机能否运行 `wowidea`。没有检测到时，用 wowidea-cli 的官方脚本安装：
 
-1. 检测本机能否运行 `wowidea`。
-2. 没有检测到时，先用 wowidea-cli 的官方脚本安装，再初始化节目：
-   - macOS / Linux：`curl -fsSL https://raw.githubusercontent.com/Salvatore0104/wowidea-cli/master/scripts/install.sh | bash`
-   - Windows PowerShell：`irm https://raw.githubusercontent.com/Salvatore0104/wowidea-cli/master/scripts/install.ps1 | iex`
-3. 已经安装时，跳过 CLI 安装，只初始化节目。
-4. 目标目录还没有 `03_资产与需求/show.json` 时，创建标准节目目录，并在 `05_素材工坊/.venv` 安装 Python 依赖。
-5. 已经有 `show.json` 时，跳过工坊初始化，不覆盖现有目录和配置。
-6. 节目根目录还没有 `.wowidea/project.json` 时，执行 `wowidea project init --dir <节目目录> --name "<节目名称>"`。
-7. 该文件已存在，或 init 提示项目已存在时，跳过，不覆盖。
-8. 安装结束时打印「交给 AI 的使用提示词」。
+- macOS / Linux：`curl -fsSL https://raw.githubusercontent.com/Salvatore0104/wowidea-cli/master/scripts/install.sh | bash`
+- Windows PowerShell：`irm https://raw.githubusercontent.com/Salvatore0104/wowidea-cli/master/scripts/install.ps1 | iex`
+
+已经安装时，跳过 CLI 安装，不重复执行官方脚本。无论 CLI 是刚装上还是本来就有，安装器都会继续做下面的初始化，并且在结束时打印同一段「交给 AI 的使用提示词」。
+
+1. 目标目录还没有 `03_资产与需求/show.json` 时，创建标准节目目录，并在 `05_素材工坊/.venv` 安装 Python 依赖。已经有 `show.json` 时，跳过工坊初始化，不覆盖现有目录和配置。
+2. 节目根目录还没有 `.wowidea/project.json` 时，执行 `wowidea project init --dir <节目目录> --name "<节目名称>"`。该文件已存在，或 init 提示项目已存在时，跳过，不覆盖。
+3. 安装结束时打印使用提示词。已安装 CLI 的路径和全新安装的路径打印的是同一段文字。
 
 本机已有 `wowidea`、且不希望在缺失时自动安装，可以加上 `--skip-wowidea`。此时找不到命令会停止，不会改写项目。
 
@@ -96,7 +94,7 @@ python -m http.server 8765 --bind 127.0.0.1 --directory "04_输出交付/<版本
 1. 节目工坊：目录中要有 03_资产与需求/show.json。没有，就在素材工坊仓库运行 scripts/install.py。已有 show.json 时跳过工坊初始化，不要覆盖。
 2. wowidea-cli：同一节目根目录要有 .wowidea/project.json。没有再执行 init。如果提示项目已存在，说明已经初始化过，直接继续使用，不要再次执行 init。
 
-安装素材工坊时，安装器会先检测 wowidea 命令。未安装则按官方脚本安装：macOS / Linux 使用 wowidea-cli 的 scripts/install.sh，Windows 使用 scripts/install.ps1。已经安装则跳过安装，只初始化项目。密钥只放在环境变量 WOWIDEA_API_KEY，不要写进仓库，不要贴进聊天。
+安装素材工坊时，安装器会先检测 wowidea 命令。未安装则按官方脚本安装：macOS / Linux 使用 wowidea-cli 的 scripts/install.sh，Windows 使用 scripts/install.ps1。已经安装则跳过 CLI 安装，仍然初始化：没有 .wowidea/project.json 就执行 wowidea project init，已有则跳过且不覆盖。两条路径结束时都打印这段提示词。密钥只放在环境变量 WOWIDEA_API_KEY，不要写进仓库，不要贴进聊天。
 
 wowidea 初始化（在节目根目录执行，把名称换成实际节目名）：
 wowidea project init --dir . --name "节目名称"
