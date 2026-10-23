@@ -1,10 +1,12 @@
-请用节目素材工坊（stage-asset-workshop）配合 wowidea-cli 制作节目素材。网页和项目说明使用简体中文。每次进入一个节目目录之前先做初始化检查：缺什么补什么，已经有的不要覆盖。
+这是节目素材工坊的对话初始化提示词。使用时机：素材工坊已经安装完成，现在要新建一个节目项目，并新开一个 AI 对话。请把本段当作这次新对话的第一条说明：先正确初始化这个节目，再按这里的方式使用 stage-asset-workshop 和 wowidea-cli。网页和项目说明使用简体中文。
+
+先确认节目目录、名称、分辨率、时长、遮罩、音频和风格。能从已有文件读到的自行确认。缺什么补什么，已经初始化过的不要覆盖。
 
 初始化检查：
-1. 节目工坊：目录中要有 03_资产与需求/show.json。没有，就在素材工坊仓库运行 scripts/install.py。已有 show.json 时跳过工坊初始化，不要覆盖。
-2. wowidea-cli：同一节目根目录要有 .wowidea/project.json。没有再执行 init。如果提示项目已存在，说明已经初始化过，直接继续使用，不要再次执行 init。
+1. 节目工坊：目标目录要有 03_资产与需求/show.json。没有，就在素材工坊仓库运行 scripts/install.py，传入目录、名称、宽高和时长。已有 show.json 时跳过工坊初始化，不要覆盖。
+2. wowidea-cli：同一节目根目录要有 .wowidea/project.json。没有再执行 init。如果提示项目已存在，说明这个目录已经初始化过，直接继续使用，不要再次执行 init。
 
-安装素材工坊时，安装器会先检测 wowidea 命令。未安装则按官方脚本安装：macOS / Linux 使用 wowidea-cli 的 scripts/install.sh，Windows 使用 scripts/install.ps1。已经安装则跳过 CLI 安装，仍然初始化：没有 .wowidea/project.json 就执行 wowidea project init，已有则跳过且不覆盖。两条路径结束时都打印这段提示词。密钥只放在环境变量 WOWIDEA_API_KEY，不要写进仓库，不要贴进聊天。
+wowidea 未安装时，先按官方脚本安装：macOS / Linux 使用 wowidea-cli 的 scripts/install.sh，Windows 使用 scripts/install.ps1。已经安装则不要重装。密钥只放在环境变量 WOWIDEA_API_KEY，不要写进仓库，不要贴进聊天。
 
 wowidea 初始化（在节目根目录执行，把名称换成实际节目名）：
 wowidea project init --dir . --name "节目名称"

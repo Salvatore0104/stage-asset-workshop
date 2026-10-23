@@ -176,7 +176,7 @@ def usage_prompt():
 
 
 def print_usage_prompt():
-    print("把下面这段提示词复制给 AI 助手：")
+    print("安装完成。新建节目并新开一个 AI 对话时，把下面这段初始化提示词整段粘贴进去：")
     print("-----")
     print(usage_prompt(), end="")
     print("-----")
